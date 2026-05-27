@@ -1,0 +1,11 @@
+
+React Native / Expo is supported as a PRO feature of [33mConsole Ninja[39m [36mhttps://console-ninja.com/pro[39m.
+
+env: load .env
+env: export EXPO_PUBLIC_API_URL
+Starting project at C:\Users\Max\Desktop\ReciclaPlus-main\frontend
+Using src/app as the root directory for Expo Router.
+React Compiler enabled
+Starting Metro Bundler
+Waiting on http://localhost:8081
+Logs for your project will appear below.
