@@ -6,6 +6,7 @@
 
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import { ambiente } from './configuracao/ambiente';
 import { testarConexao } from './configuracao/bancoDados';
 import { middlewareErros } from './middlewares/erros';
@@ -22,11 +23,43 @@ const app = express();
 
 // --- MIDDLEWARES GLOBAIS ---
 
-// CORS: permite que o app mobile acesse a API (origens diferentes)
-app.use(cors());
+app.disable('x-powered-by');
+app.use(helmet());
+
+const origensPadraoDesenvolvimento = [
+  'http://localhost:19006',
+  'http://127.0.0.1:19006',
+  'http://localhost:8081',
+  'http://127.0.0.1:8081',
+];
+
+const origensPermitidas = ambiente.cors.origensPermitidas.length > 0
+  ? ambiente.cors.origensPermitidas
+  : process.env.NODE_ENV === 'development'
+    ? origensPadraoDesenvolvimento
+    : [];
+
+// CORS: restringe origens de browser; clientes sem origin (app nativo/curl) continuam permitidos.
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+
+    if (origensPermitidas.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+
+    callback(null, false);
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 // Parse de JSON: le o corpo das requests como JSON automaticamente
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 
 // Converte todas as respostas JSON de snake_case para camelCase
 app.use((_req: Request, res: Response, next: NextFunction) => {

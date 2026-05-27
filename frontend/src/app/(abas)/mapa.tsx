@@ -1,49 +1,38 @@
 // ============================================================
-// TELA: Mapa — VERSAO COM TAP PARA CADASTRAR
+// TELA: Mapa - VERSAO COM TAP PARA CADASTRAR
 // Rota: /(abas)/mapa
-//
-// FUNCAO NOVA:
-//   Ao TOCAR em qualquer local do mapa:
-//     1. Coloca um marcador temporario (ambar) naquele ponto.
-//     2. Abre Alert perguntando se quer cadastrar ali.
-//     3. Se confirmar, navega para /ponto/novo com as coords
-//        no query string (lat e lng).
-//   A tela de cadastro le esses params via useLocalSearchParams
-//   e ja pre-preenche a localizacao.
-//
-//   Se o usuario cancelar, o marcador some.
 // ============================================================
 
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
   ActivityIndicator,
-  ScrollView,
   Alert,
-} from 'react-native';
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import MapView, {
-  Marker,
   Callout,
-  PROVIDER_DEFAULT,
   MapPressEvent,
-} from 'react-native-maps';
-import { router } from 'expo-router';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useState, useEffect, useRef } from 'react';
-import * as Location from 'expo-location';
-import { usePontos } from '@/hooks/usePontos';
-import { CATEGORIAS } from '@/constantes/categorias';
+  Marker,
+  PROVIDER_DEFAULT,
+} from "react-native-maps";
+import { router } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useEffect, useRef, useState } from "react";
+import * as Location from "expo-location";
+import { usePontos } from "@/hooks/usePontos";
+import { CATEGORIAS } from "@/constantes/categorias";
 import {
+  Bordas,
   Cores,
   CoresCategorias,
-  Fontes,
   Espacamento,
-  Bordas,
+  Fontes,
   Sombra,
-} from '@/constantes/tema';
-import { Ponto } from '@/tipos/ponto';
+} from "@/constantes/tema";
+import { Ponto } from "@/tipos/ponto";
 
 const REGIAO_INICIAL = {
   latitude: -23.5505,
@@ -52,57 +41,66 @@ const REGIAO_INICIAL = {
   longitudeDelta: 0.05,
 };
 
+type Coordenada = {
+  latitude: number;
+  longitude: number;
+};
+
 export default function TelaMapa() {
   const mapaRef = useRef<MapView>(null);
-  const [locUsuario, setLocUsuario] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
+  const [locUsuario, setLocUsuario] = useState<Coordenada | null>(null);
 
   // Marcador temporario gerado pelo toque do usuario no mapa.
   // Mantemos no state para poder limpar/exibir o pin amarelo.
-  const [marcadorTemp, setMarcadorTemp] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
+  const [marcadorTemp, setMarcadorTemp] = useState<Coordenada | null>(null);
 
   const [categoriaSelecionada, setCategoria] = useState<number | undefined>(
-    undefined
+    undefined,
   );
   const { pontos, carregando } = usePontos(categoriaSelecionada);
 
-  // Solicita permissao e centraliza o mapa na localizacao do usuario
+  // Solicita permissao e centraliza o mapa na localizacao do usuario.
   useEffect(() => {
     async function obterLocalizacao() {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') return;
+      if (status !== "granted") {
+        return;
+      }
 
       const loc = await Location.getCurrentPositionAsync({});
       const coords = {
         latitude: loc.coords.latitude,
         longitude: loc.coords.longitude,
       };
+
       setLocUsuario(coords);
       mapaRef.current?.animateToRegion(
         { ...coords, latitudeDelta: 0.05, longitudeDelta: 0.05 },
-        800
+        800,
       );
     }
+
     obterLocalizacao();
   }, []);
 
   function recentrar() {
-    if (!locUsuario) return;
+    if (!locUsuario) {
+      return;
+    }
+
     mapaRef.current?.animateToRegion(
       { ...locUsuario, latitudeDelta: 0.03, longitudeDelta: 0.03 },
-      600
+      600,
     );
   }
 
   // Cor do pin de cada ponto. Usa a primeira categoria do ponto
   // como referencia. Se nao tem categoria, verde primario.
   function corMarcador(ponto: Ponto): string {
-    if (!ponto.categorias?.length) return Cores.primaria;
+    if (!ponto.categorias?.length) {
+      return Cores.primaria;
+    }
+
     return CoresCategorias[ponto.categorias[0].id] ?? Cores.primaria;
   }
 
@@ -114,35 +112,36 @@ export default function TelaMapa() {
     setMarcadorTemp({ latitude, longitude });
 
     Alert.alert(
-      'Novo ponto de coleta',
+      "Novo ponto de coleta",
       `Cadastrar ponto nesta localizacao?\n\nLat: ${latitude.toFixed(
-        5
+        5,
       )}\nLng: ${longitude.toFixed(5)}`,
       [
         {
-          text: 'Cancelar',
-          style: 'cancel',
-          // Limpa o marcador temporario se o usuario cancelar
+          text: "Cancelar",
+          style: "cancel",
+          // Limpa o marcador temporario se o usuario cancelar.
           onPress: () => setMarcadorTemp(null),
         },
         {
-          text: 'Cadastrar',
+          text: "Cadastrar",
           onPress: () => {
             // Navega para a tela de cadastro passando as coordenadas
             // via query string. A tela /ponto/novo le com
             // useLocalSearchParams() e pre-preenche os campos.
             router.push({
-              pathname: '/ponto/novo',
+              pathname: "/ponto/novo",
               params: {
                 lat: String(latitude),
                 lng: String(longitude),
               },
             });
+
             // Limpa o marcador depois de navegar.
             setMarcadorTemp(null);
           },
         },
-      ]
+      ],
     );
   }
 
@@ -159,7 +158,7 @@ export default function TelaMapa() {
         onPress={aoTocarMapa}
       >
         {/* Marcadores dos pontos cadastrados */}
-        {pontos.map(ponto => (
+        {pontos.map((ponto) => (
           <Marker
             key={ponto.id}
             coordinate={{
@@ -179,16 +178,13 @@ export default function TelaMapa() {
                     {ponto.horarioFuncionamento}
                   </Text>
                 ) : null}
-                <Text style={estilos.calloutVer}>
-                  Toque para ver detalhes →
-                </Text>
+                <Text style={estilos.calloutVer}>Toque para ver detalhes</Text>
               </View>
             </Callout>
           </Marker>
         ))}
 
-        {/* Marcador temporario (do toque do usuario) — cor ambar
-            destacada e callout customizado pedindo confirmacao. */}
+        {/* Marcador temporario (do toque do usuario) - cor ambar destacada. */}
         {marcadorTemp ? (
           <Marker
             coordinate={marcadorTemp}
@@ -234,8 +230,9 @@ export default function TelaMapa() {
             </Text>
           </TouchableOpacity>
 
-          {CATEGORIAS.map(cat => {
+          {CATEGORIAS.map((cat) => {
             const ativo = categoriaSelecionada === cat.id;
+
             return (
               <TouchableOpacity
                 key={cat.id}
@@ -253,10 +250,7 @@ export default function TelaMapa() {
                   style={{ marginRight: 3 }}
                 />
                 <Text
-                  style={[
-                    estilos.chipTexto,
-                    ativo && estilos.chipTextoAtivo,
-                  ]}
+                  style={[estilos.chipTexto, ativo && estilos.chipTextoAtivo]}
                 >
                   {cat.nome}
                 </Text>
@@ -278,7 +272,7 @@ export default function TelaMapa() {
               color={Cores.primaria}
             />
             <Text style={estilos.contadorTexto}>
-              {pontos.length} {pontos.length === 1 ? 'ponto' : 'pontos'}
+              {pontos.length} {pontos.length === 1 ? "ponto" : "pontos"}
             </Text>
           </View>
         )}
@@ -297,10 +291,10 @@ export default function TelaMapa() {
         />
       </TouchableOpacity>
 
-      {/* FAB novo ponto (sem coordenadas — abre form vazio) */}
+      {/* FAB novo ponto (sem coordenadas - abre form vazio) */}
       <TouchableOpacity
         style={estilos.fab}
-        onPress={() => router.push('/ponto/novo')}
+        onPress={() => router.push("/ponto/novo")}
         activeOpacity={0.85}
       >
         <MaterialCommunityIcons name="plus" size={28} color={Cores.branco} />
@@ -315,11 +309,11 @@ const estilos = StyleSheet.create({
 
   // ------ Dica flutuante ------
   dica: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 150,
-    alignSelf: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
+    alignSelf: "center",
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
     backgroundColor: Cores.branco,
     paddingHorizontal: Espacamento.md,
@@ -362,7 +356,7 @@ const estilos = StyleSheet.create({
 
   // ------ Filtro categorias ------
   filtroContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 56,
     left: 0,
     right: 0,
@@ -372,8 +366,8 @@ const estilos = StyleSheet.create({
     gap: Espacamento.sm,
   },
   chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: Cores.branco,
     borderWidth: 1.5,
     borderColor: Cores.cinzaBorda,
@@ -395,9 +389,9 @@ const estilos = StyleSheet.create({
 
   // ------ Contador ------
   contador: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 90,
-    alignSelf: 'center',
+    alignSelf: "center",
     backgroundColor: Cores.branco,
     borderRadius: Bordas.raioTotal,
     paddingHorizontal: Espacamento.md,
@@ -405,8 +399,8 @@ const estilos = StyleSheet.create({
     ...Sombra.padrao,
   },
   contadorLinha: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   contadorTexto: {
@@ -417,29 +411,29 @@ const estilos = StyleSheet.create({
 
   // ------ Botao recentrar ------
   btnRecentrar: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 150,
     right: Espacamento.lg,
     width: 44,
     height: 44,
     borderRadius: 22,
     backgroundColor: Cores.branco,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     ...Sombra.padrao,
   },
 
   // ------ FAB ------
   fab: {
-    position: 'absolute',
+    position: "absolute",
     bottom: Espacamento.xl,
     right: Espacamento.lg,
     width: 56,
     height: 56,
     borderRadius: 28,
     backgroundColor: Cores.primaria,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     ...Sombra.forte,
   },
 });

@@ -5,12 +5,12 @@
 // Cada aba tem icone e label em portugues.
 // ============================================================
 
-import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { Cores } from '@/constantes/tema';
+import { Tabs } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { Cores } from "@/constantes/tema";
 
 // Tipo auxiliar para tipar o nome dos icones do Ionicons
-type NomeIcone = React.ComponentProps<typeof Ionicons>['name'];
+type NomeIcone = React.ComponentProps<typeof Ionicons>["name"];
 
 // Componente do icone da aba (ativo = cor primaria, inativo = cinza)
 function IconeAba({ nome, focado }: { nome: NomeIcone; focado: boolean }) {
@@ -42,9 +42,12 @@ export default function LayoutAbas() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Inicio',
+          title: "Inicio",
           tabBarIcon: ({ focused }) => (
-            <IconeAba nome={focused ? 'home' : 'home-outline'} focado={focused} />
+            <IconeAba
+              nome={focused ? "home" : "home-outline"}
+              focado={focused}
+            />
           ),
         }}
       />
@@ -53,9 +56,9 @@ export default function LayoutAbas() {
       <Tabs.Screen
         name="mapa"
         options={{
-          title: 'Mapa',
+          title: "Mapa",
           tabBarIcon: ({ focused }) => (
-            <IconeAba nome={focused ? 'map' : 'map-outline'} focado={focused} />
+            <IconeAba nome={focused ? "map" : "map-outline"} focado={focused} />
           ),
         }}
       />
@@ -64,9 +67,12 @@ export default function LayoutAbas() {
       <Tabs.Screen
         name="lista"
         options={{
-          title: 'Pontos',
+          title: "Pontos",
           tabBarIcon: ({ focused }) => (
-            <IconeAba nome={focused ? 'list' : 'list-outline'} focado={focused} />
+            <IconeAba
+              nome={focused ? "list" : "list-outline"}
+              focado={focused}
+            />
           ),
         }}
       />
@@ -75,9 +81,12 @@ export default function LayoutAbas() {
       <Tabs.Screen
         name="favoritos"
         options={{
-          title: 'Favoritos',
+          title: "Favoritos",
           tabBarIcon: ({ focused }) => (
-            <IconeAba nome={focused ? 'heart' : 'heart-outline'} focado={focused} />
+            <IconeAba
+              nome={focused ? "heart" : "heart-outline"}
+              focado={focused}
+            />
           ),
         }}
       />

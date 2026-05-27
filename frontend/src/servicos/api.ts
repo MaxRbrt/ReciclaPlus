@@ -12,12 +12,22 @@
 
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { obterToken, removerToken } from './tokenSeguro';
 
 // URL base da API — trocar pelo IP real do servidor durante o desenvolvimento.
 // Em producao, seria o dominio do servidor hospedado.
 // IMPORTANTE: usar o IP da maquina na rede local (nao usar localhost
 // no dispositivo fisico — o dispositivo nao acessa localhost do PC).
-const URL_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'http://192.168.5.9:3000';
+const URL_BASE = process.env.EXPO_PUBLIC_API_URL;
+const emDesenvolvimento = process.env.NODE_ENV !== 'production';
+
+if (!URL_BASE) {
+  throw new Error('EXPO_PUBLIC_API_URL nao definido. Configure a variavel no .env.');
+}
+
+if (!emDesenvolvimento && !URL_BASE.startsWith('https://')) {
+  throw new Error('EXPO_PUBLIC_API_URL deve usar HTTPS fora de desenvolvimento.');
+}
 
 let aoNaoAutorizado: (() => void) | null = null;
 
@@ -27,7 +37,7 @@ export function registrarAoNaoAutorizado(handler: (() => void) | null) {
 
 async function limparSessaoLocal() {
   await Promise.all([
-    AsyncStorage.removeItem('@reciclaplus:token'),
+    removerToken(),
     AsyncStorage.removeItem('@reciclaplus:usuario'),
   ]);
 }
@@ -42,10 +52,10 @@ export const api = axios.create({
 });
 
 // INTERCEPTOR DE REQUEST
-// Antes de cada requisicao, busca o token no AsyncStorage
+// Antes de cada requisicao, busca o token no SecureStore
 // e adiciona no header Authorization se existir.
 api.interceptors.request.use(async (config) => {
-  const token = await AsyncStorage.getItem('@reciclaplus:token');
+  const token = await obterToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

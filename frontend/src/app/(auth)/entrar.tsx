@@ -3,7 +3,7 @@
 // Rota: /(auth)/entrar
 // ============================================================
 
-import { useState, useContext } from 'react';
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -18,11 +18,11 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { AutenticacaoContexto } from '@/contextos/AutenticacaoContexto';
+import { useAutenticacao } from '@/hooks/useAutenticacao';
 import { Cores, Fontes, Espacamento, Bordas, Sombra } from '@/constantes/tema';
 
 export default function TelaEntrar() {
-  const { entrar } = useContext(AutenticacaoContexto);
+  const { entrar } = useAutenticacao();
 
   const [email, setEmail]             = useState('');
   const [senha, setSenha]             = useState('');

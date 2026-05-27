@@ -36,7 +36,7 @@ import {
   Sombra,
   Gradientes,
 } from '@/constantes/tema';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Ponto } from '@/tipos/ponto';
 import { listarFavoritos } from '@/servicos/favoritos';
 import { useFocusEffect } from 'expo-router';

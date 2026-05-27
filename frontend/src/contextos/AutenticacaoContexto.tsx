@@ -45,6 +45,11 @@ export function AutenticacaoProvider({ children }: { children: ReactNode }) {
     verificarSessao();
   }, []);
 
+  // Registra o callback global de "nao autorizado" (HTTP 401).
+  // Quando o interceptor do axios detectar token expirado/invalido,
+  // ele chama esse handler para zerar o usuario em memoria —
+  // o GuardaDeRotas entao redireciona para a tela de login.
+  // O cleanup remove o handler ao desmontar o provider (ex: testes).
   useEffect(() => {
     registrarAoNaoAutorizado(() => setUsuario(null));
     return () => registrarAoNaoAutorizado(null);

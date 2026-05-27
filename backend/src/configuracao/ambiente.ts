@@ -7,6 +7,23 @@
 
 import 'dotenv/config';
 
+function variavelObrigatoria(nome: string): string {
+  const valor = process.env[nome]?.trim();
+  if (!valor) {
+    throw new Error(`Variavel de ambiente obrigatoria ausente: ${nome}`);
+  }
+  return valor;
+}
+
+function listaVariavel(nome: string): string[] {
+  const valor = process.env[nome];
+  if (!valor) return [];
+  return valor
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 export const ambiente = {
   porta: Number(process.env.PORTA) || 3000,
 
@@ -19,7 +36,11 @@ export const ambiente = {
   },
 
   jwt: {
-    segredo: process.env.JWT_SEGREDO || 'chave_padrao_insegura',
+    segredo: variavelObrigatoria('JWT_SEGREDO'),
     expiracao: process.env.JWT_EXPIRACAO || '7d',
+  },
+
+  cors: {
+    origensPermitidas: listaVariavel('CORS_ORIGENS'),
   },
 };

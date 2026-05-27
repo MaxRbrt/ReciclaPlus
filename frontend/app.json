@@ -48,7 +48,8 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Recicla+ usa sua localizacao para encontrar pontos de coleta proximos."
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -4,21 +4,30 @@
 // ============================================================
 
 import {
-  View, Text, StyleSheet, FlatList,
-  TouchableOpacity, ActivityIndicator, Alert,
-} from 'react-native';
-import { router, useFocusEffect } from 'expo-router';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useState, useCallback } from 'react';
-import { useAutenticacao } from '@/hooks/useAutenticacao';
-import { FavoritoPonto, listarFavoritos, removerFavorito } from '@/servicos/favoritos';
-import { Cores, Fontes, Espacamento, Bordas, Sombra } from '@/constantes/tema';
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
+import { router, useFocusEffect } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useState, useCallback } from "react";
+import { useAutenticacao } from "@/hooks/useAutenticacao";
+import {
+  FavoritoPonto,
+  listarFavoritos,
+  removerFavorito,
+} from "@/servicos/favoritos";
+import { Cores, Fontes, Espacamento, Bordas, Sombra } from "@/constantes/tema";
 
 export default function TelaFavoritos() {
   const { usuario } = useAutenticacao();
-  const [favoritos, setFavoritos]     = useState<FavoritoPonto[]>([]);
-  const [carregando, setCarregando]   = useState(true);
-  const [removendo, setRemovendo]     = useState<number | null>(null);
+  const [favoritos, setFavoritos] = useState<FavoritoPonto[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [removendo, setRemovendo] = useState<number | null>(null);
 
   const carregar = useCallback(async () => {
     if (!usuario) {
@@ -31,7 +40,7 @@ export default function TelaFavoritos() {
       const dados = await listarFavoritos();
       setFavoritos(dados);
     } catch {
-      Alert.alert('Erro', 'Nao foi possivel carregar seus favoritos.');
+      Alert.alert("Erro", "Nao foi possivel carregar seus favoritos.");
     } finally {
       setCarregando(false);
     }
@@ -40,32 +49,30 @@ export default function TelaFavoritos() {
   useFocusEffect(
     useCallback(() => {
       carregar();
-    }, [carregar])
+    }, [carregar]),
   );
 
   async function aoRemover(favoritoId: number, nomePonto: string) {
-    Alert.alert(
-      'Remover favorito',
-      `Remover "${nomePonto}" dos favoritos?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Remover',
-          style: 'destructive',
-          onPress: async () => {
-            setRemovendo(favoritoId);
-            try {
-              await removerFavorito(favoritoId);
-              setFavoritos(prev => prev.filter(f => f.favoritoId !== favoritoId));
-            } catch {
-              Alert.alert('Erro', 'Nao foi possivel remover o favorito.');
-            } finally {
-              setRemovendo(null);
-            }
-          },
+    Alert.alert("Remover favorito", `Remover "${nomePonto}" dos favoritos?`, [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Remover",
+        style: "destructive",
+        onPress: async () => {
+          setRemovendo(favoritoId);
+          try {
+            await removerFavorito(favoritoId);
+            setFavoritos((prev) =>
+              prev.filter((f) => f.favoritoId !== favoritoId),
+            );
+          } catch {
+            Alert.alert("Erro", "Nao foi possivel remover o favorito.");
+          } finally {
+            setRemovendo(null);
+          }
         },
-      ]
-    );
+      },
+    ]);
   }
 
   function renderItem({ item }: { item: FavoritoPonto }) {
@@ -80,19 +87,30 @@ export default function TelaFavoritos() {
           <MaterialCommunityIcons name="heart" size={22} color={Cores.erro} />
         </View>
         <View style={estilos.cardInfo}>
-          <Text style={estilos.cardNome} numberOfLines={1}>{item.nome}</Text>
-          <Text style={estilos.cardEndereco} numberOfLines={1}>{item.endereco}</Text>
-          <Text style={estilos.cardBairro} numberOfLines={1}>{item.bairro}</Text>
+          <Text style={estilos.cardNome} numberOfLines={1}>
+            {item.nome}
+          </Text>
+          <Text style={estilos.cardEndereco} numberOfLines={1}>
+            {item.endereco}
+          </Text>
+          <Text style={estilos.cardBairro} numberOfLines={1}>
+            {item.bairro}
+          </Text>
         </View>
         <TouchableOpacity
           style={estilos.btnRemover}
           onPress={() => aoRemover(item.favoritoId, item.nome)}
           disabled={removendoEste}
         >
-          {removendoEste
-            ? <ActivityIndicator size="small" color={Cores.erro} />
-            : <MaterialCommunityIcons name="heart-off-outline" size={22} color={Cores.erro} />
-          }
+          {removendoEste ? (
+            <ActivityIndicator size="small" color={Cores.erro} />
+          ) : (
+            <MaterialCommunityIcons
+              name="heart-off-outline"
+              size={22}
+              color={Cores.erro}
+            />
+          )}
         </TouchableOpacity>
       </TouchableOpacity>
     );
@@ -100,27 +118,36 @@ export default function TelaFavoritos() {
 
   return (
     <View style={estilos.raiz}>
-
       {/* Header */}
       <View style={estilos.header}>
         <Text style={estilos.headerTitulo}>Favoritos</Text>
         <Text style={estilos.headerSub}>
-          {favoritos.length} {favoritos.length === 1 ? 'ponto salvo' : 'pontos salvos'}
+          {favoritos.length}{" "}
+          {favoritos.length === 1 ? "ponto salvo" : "pontos salvos"}
         </Text>
       </View>
 
       {carregando && (
-        <ActivityIndicator color={Cores.primaria} style={{ marginTop: Espacamento.xl }} />
+        <ActivityIndicator
+          color={Cores.primaria}
+          style={{ marginTop: Espacamento.xl }}
+        />
       )}
 
       {!carregando && favoritos.length === 0 && (
         <View style={estilos.vazio}>
-          <MaterialCommunityIcons name="heart-off-outline" size={64} color={Cores.cinzaBorda} />
+          <MaterialCommunityIcons
+            name="heart-off-outline"
+            size={64}
+            color={Cores.cinzaBorda}
+          />
           <Text style={estilos.vazioTitulo}>Nenhum favorito ainda</Text>
-          <Text style={estilos.vazioSub}>Explore os pontos de coleta e salve os que preferir.</Text>
+          <Text style={estilos.vazioSub}>
+            Explore os pontos de coleta e salve os que preferir.
+          </Text>
           <TouchableOpacity
             style={estilos.btnExplorar}
-            onPress={() => router.push('/(abas)/lista')}
+            onPress={() => router.push("/(abas)/lista")}
             activeOpacity={0.85}
           >
             <Text style={estilos.btnExplorarTexto}>Explorar pontos</Text>
@@ -131,7 +158,7 @@ export default function TelaFavoritos() {
       {!carregando && favoritos.length > 0 && (
         <FlatList
           data={favoritos}
-          keyExtractor={item => String(item.favoritoId)}
+          keyExtractor={(item) => String(item.favoritoId)}
           renderItem={renderItem}
           contentContainerStyle={estilos.lista}
           showsVerticalScrollIndicator={false}
@@ -171,8 +198,8 @@ const estilos = StyleSheet.create({
     backgroundColor: Cores.branco,
     borderRadius: Bordas.raio,
     padding: Espacamento.md,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: Espacamento.sm,
     ...Sombra.suave,
   },
@@ -181,8 +208,8 @@ const estilos = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     backgroundColor: Cores.erroFundo,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: Espacamento.sm,
   },
   cardInfo: { flex: 1 },
@@ -207,8 +234,8 @@ const estilos = StyleSheet.create({
 
   vazio: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: Espacamento.xl,
     gap: Espacamento.sm,
   },
@@ -221,7 +248,7 @@ const estilos = StyleSheet.create({
   vazioSub: {
     fontSize: Fontes.normal,
     color: Cores.cinzaMedio,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 22,
   },
   btnExplorar: {

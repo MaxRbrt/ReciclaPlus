@@ -1,5 +1,5 @@
 // ============================================================
-// TELA: Lista de Pontos de Coleta — VERSAO REPAGINADA
+// TELA: Lista de Pontos de Coleta - VERSAO REPAGINADA
 // Rota: /(abas)/lista
 //
 // ESTRUTURA:
@@ -15,41 +15,33 @@
 //        - Sem pontos no back
 //        - Sem resultados para busca (mensagem contextual)
 //   7. FAB (botao flutuante) para adicionar ponto novo
-//
-// BUGS ANTERIORES CORRIGIDOS:
-//   - <MaterialCommunityIcons> dentro de <Text>: causava
-//     warnings/instabilidade no Android. Trocado por View row.
-//   - Estado vazio generico: agora mostra mensagem contextual
-//     diferenciando "lista vazia no back" de "busca sem match".
-//   - Cards sem informacao de categoria: agora exibem badges
-//     coloridas das categorias do ponto.
 // ============================================================
 
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
+import { useMemo, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
+  ActivityIndicator,
   FlatList,
+  ScrollView,
+  StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
-  ActivityIndicator,
-  ScrollView,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useState, useMemo } from 'react';
-import { usePontos } from '@/hooks/usePontos';
-import { CATEGORIAS } from '@/constantes/categorias';
+  View,
+} from "react-native";
+import { CATEGORIAS } from "@/constantes/categorias";
 import {
-  Cores,
-  Fontes,
-  Espacamento,
   Bordas,
-  Sombra,
+  Cores,
+  Espacamento,
+  Fontes,
   Gradientes,
-} from '@/constantes/tema';
-import { Ponto } from '@/tipos/ponto';
+  Sombra,
+} from "@/constantes/tema";
+import { usePontos } from "@/hooks/usePontos";
+import { Ponto } from "@/tipos/ponto";
 
 // ============================================================
 // SUBCOMPONENTE: Badge de categoria
@@ -60,11 +52,11 @@ function BadgeCategoria({ nome }: { nome: string }) {
   // Se nao achar, usa cinza neutro. Isso evita crash quando o back
   // adiciona categoria nova sem ainda existir no front.
   const cor =
-    CATEGORIAS.find(c => c.nome.toLowerCase() === nome.toLowerCase())?.cor ??
+    CATEGORIAS.find((c) => c.nome.toLowerCase() === nome.toLowerCase())?.cor ??
     Cores.cinzaMedio;
 
   return (
-    <View style={[estilos.badge, { backgroundColor: cor + '1A' }]}>
+    <View style={[estilos.badge, { backgroundColor: cor + "1A" }]}>
       <View style={[estilos.badgePonto, { backgroundColor: cor }]} />
       <Text style={[estilos.badgeTexto, { color: cor }]}>{nome}</Text>
     </View>
@@ -109,7 +101,7 @@ function CardPonto({ ponto }: { ponto: Ponto }) {
           {ponto.bairro}
         </Text>
 
-        {/* Horario — icone separado do texto (evita Icon dentro de Text) */}
+        {/* Horario - icone separado do texto (evita Icon dentro de Text) */}
         {ponto.horarioFuncionamento ? (
           <View style={estilos.cardHorarioLinha}>
             <MaterialCommunityIcons
@@ -126,12 +118,16 @@ function CardPonto({ ponto }: { ponto: Ponto }) {
         {/* Badges de categoria */}
         {categoriasVisiveis.length > 0 ? (
           <View style={estilos.cardBadges}>
-            {categoriasVisiveis.map(cat => (
+            {categoriasVisiveis.map((cat) => (
               <BadgeCategoria key={cat.id} nome={cat.nome} />
             ))}
             {restantes > 0 ? (
-              <View style={[estilos.badge, { backgroundColor: Cores.cinzaBorda }]}>
-                <Text style={[estilos.badgeTexto, { color: Cores.cinzaEscuro }]}>
+              <View
+                style={[estilos.badge, { backgroundColor: Cores.cinzaBorda }]}
+              >
+                <Text
+                  style={[estilos.badgeTexto, { color: Cores.cinzaEscuro }]}
+                >
                   +{restantes}
                 </Text>
               </View>
@@ -154,32 +150,34 @@ function CardPonto({ ponto }: { ponto: Ponto }) {
 // TELA PRINCIPAL
 // ============================================================
 export default function TelaLista() {
-  const [busca, setBusca] = useState('');
+  const [busca, setBusca] = useState("");
   const [categoriaSelecionada, setCategoria] = useState<number | undefined>(
-    undefined
+    undefined,
   );
-  const { pontos, carregando, erro, recarregar } = usePontos(
-    categoriaSelecionada
-  );
+  const { pontos, carregando, erro, recarregar } =
+    usePontos(categoriaSelecionada);
 
-  // Filtra localmente por busca (nome ou bairro)
+  // Filtra localmente por busca (nome ou bairro).
   const pontosFiltrados = useMemo(() => {
-    if (!busca.trim()) return pontos;
+    if (!busca.trim()) {
+      return pontos;
+    }
+
     const termo = busca.toLowerCase();
     return pontos.filter(
-      p =>
+      (p) =>
         p.nome.toLowerCase().includes(termo) ||
-        p.bairro.toLowerCase().includes(termo)
+        p.bairro.toLowerCase().includes(termo),
     );
   }, [pontos, busca]);
 
   // Helper para determinar qual estado vazio mostrar
-  // (lista vazia do back vs busca sem match)
-  const buscaAtiva = busca.trim().length > 0 || categoriaSelecionada !== undefined;
+  // (lista vazia do back vs busca sem match).
+  const buscaAtiva =
+    busca.trim().length > 0 || categoriaSelecionada !== undefined;
 
   return (
     <View style={estilos.raiz}>
-
       {/* ========================================== */}
       {/* HEADER COM GRADIENTE                       */}
       {/* ========================================== */}
@@ -191,8 +189,8 @@ export default function TelaLista() {
       >
         <Text style={estilos.headerTitulo}>Pontos de Coleta</Text>
         <Text style={estilos.headerSub}>
-          {pontosFiltrados.length}{' '}
-          {pontosFiltrados.length === 1 ? 'ponto' : 'pontos'} disponiveis
+          {pontosFiltrados.length}{" "}
+          {pontosFiltrados.length === 1 ? "ponto" : "pontos"} disponiveis
         </Text>
         {/* Espaco para a busca sobrepor */}
         <View style={{ height: 24 }} />
@@ -214,11 +212,11 @@ export default function TelaLista() {
           onChangeText={setBusca}
           placeholder="Buscar por nome ou bairro..."
           placeholderTextColor={Cores.cinzaMedio}
-          // clearButtonMode so funciona no iOS; no Android usamos o botao manual
+          // clearButtonMode so funciona no iOS; no Android usamos o botao manual.
           clearButtonMode="while-editing"
         />
         {busca.length > 0 ? (
-          <TouchableOpacity onPress={() => setBusca('')} hitSlop={8}>
+          <TouchableOpacity onPress={() => setBusca("")} hitSlop={8}>
             <MaterialCommunityIcons
               name="close-circle"
               size={18}
@@ -237,12 +235,9 @@ export default function TelaLista() {
         style={estilos.chips}
         contentContainerStyle={estilos.chipsConteudo}
       >
-        {/* Chip "Todos" — limpa filtro de categoria */}
+        {/* Chip "Todos" - limpa filtro de categoria */}
         <TouchableOpacity
-          style={[
-            estilos.chip,
-            !categoriaSelecionada && estilos.chipAtivo,
-          ]}
+          style={[estilos.chip, !categoriaSelecionada && estilos.chipAtivo]}
           onPress={() => setCategoria(undefined)}
           activeOpacity={0.85}
         >
@@ -256,7 +251,7 @@ export default function TelaLista() {
           </Text>
         </TouchableOpacity>
 
-        {CATEGORIAS.map(cat => {
+        {CATEGORIAS.map((cat) => {
           const ativo = categoriaSelecionada === cat.id;
           return (
             <TouchableOpacity
@@ -275,10 +270,7 @@ export default function TelaLista() {
                 style={estilos.chipIcone}
               />
               <Text
-                style={[
-                  estilos.chipTexto,
-                  ativo && estilos.chipTextoAtivo,
-                ]}
+                style={[estilos.chipTexto, ativo && estilos.chipTextoAtivo]}
               >
                 {cat.nome}
               </Text>
@@ -294,7 +286,7 @@ export default function TelaLista() {
         <TouchableOpacity
           style={estilos.limparFiltros}
           onPress={() => {
-            setBusca('');
+            setBusca("");
             setCategoria(undefined);
           }}
           activeOpacity={0.7}
@@ -341,23 +333,23 @@ export default function TelaLista() {
       {!carregando && !erro && pontosFiltrados.length === 0 && (
         <View style={estilos.estado}>
           <MaterialCommunityIcons
-            name={buscaAtiva ? 'magnify-close' : 'map-marker-off'}
+            name={buscaAtiva ? "magnify-close" : "map-marker-off"}
             size={48}
             color={Cores.cinzaMedio}
           />
           <Text style={estilos.estadoTitulo}>
-            {buscaAtiva ? 'Nenhum resultado' : 'Sem pontos cadastrados'}
+            {buscaAtiva ? "Nenhum resultado" : "Sem pontos cadastrados"}
           </Text>
           <Text style={estilos.estadoTexto}>
             {buscaAtiva
-              ? 'Tente outra busca ou remova os filtros.'
-              : 'Seja o primeiro a cadastrar um ponto de coleta!'}
+              ? "Tente outra busca ou remova os filtros."
+              : "Seja o primeiro a cadastrar um ponto de coleta!"}
           </Text>
           {buscaAtiva ? (
             <TouchableOpacity
               style={estilos.btnTentar}
               onPress={() => {
-                setBusca('');
+                setBusca("");
                 setCategoria(undefined);
               }}
             >
@@ -370,7 +362,7 @@ export default function TelaLista() {
       {!carregando && !erro && pontosFiltrados.length > 0 && (
         <FlatList
           data={pontosFiltrados}
-          keyExtractor={item => String(item.id)}
+          keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => <CardPonto ponto={item} />}
           contentContainerStyle={estilos.lista}
           showsVerticalScrollIndicator={false}
@@ -382,7 +374,7 @@ export default function TelaLista() {
       {/* ========================================== */}
       <TouchableOpacity
         style={estilos.fab}
-        onPress={() => router.push('/ponto/novo')}
+        onPress={() => router.push("/ponto/novo")}
         activeOpacity={0.85}
       >
         <MaterialCommunityIcons name="plus" size={22} color={Cores.branco} />
@@ -416,14 +408,14 @@ const estilos = StyleSheet.create({
   },
   headerSub: {
     fontSize: Fontes.normal,
-    color: 'rgba(255,255,255,0.85)',
+    color: "rgba(255,255,255,0.85)",
     marginTop: 2,
   },
 
   // ------------ BUSCA ------------
   buscaContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: Cores.branco,
     marginHorizontal: Espacamento.lg,
     marginTop: -24, // sobrepoe o espaco reservado no header
@@ -450,11 +442,11 @@ const estilos = StyleSheet.create({
   chipsConteudo: {
     paddingHorizontal: Espacamento.lg,
     gap: Espacamento.sm,
-    alignItems: 'center',
+    alignItems: "center",
   },
   chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1.5,
     borderColor: Cores.cinzaBorda,
     borderRadius: Bordas.raioTotal,
@@ -480,8 +472,8 @@ const estilos = StyleSheet.create({
 
   // ------------ LIMPAR FILTROS ------------
   limparFiltros: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
     paddingHorizontal: Espacamento.lg,
     paddingVertical: Espacamento.xs,
@@ -504,8 +496,8 @@ const estilos = StyleSheet.create({
     backgroundColor: Cores.branco,
     borderRadius: Bordas.raioGrande,
     padding: Espacamento.md,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     ...Sombra.suave,
   },
   cardIcone: {
@@ -513,8 +505,8 @@ const estilos = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     backgroundColor: Cores.primariaFundo,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: Espacamento.sm,
     marginTop: 2,
   },
@@ -537,8 +529,8 @@ const estilos = StyleSheet.create({
     color: Cores.cinzaMedio,
   },
   cardHorarioLinha: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
     marginTop: 4,
   },
@@ -548,16 +540,16 @@ const estilos = StyleSheet.create({
     fontWeight: Fontes.medio_peso,
   },
   cardBadges: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 4,
     marginTop: Espacamento.sm,
   },
 
   // ------------ BADGE ------------
   badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: Espacamento.sm,
     paddingVertical: 3,
     borderRadius: Bordas.raioTotal,
@@ -576,8 +568,8 @@ const estilos = StyleSheet.create({
   // ------------ ESTADO ------------
   estado: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     gap: Espacamento.sm,
     padding: Espacamento.lg,
   },
@@ -590,11 +582,11 @@ const estilos = StyleSheet.create({
   estadoTexto: {
     fontSize: Fontes.normal,
     color: Cores.cinzaMedio,
-    textAlign: 'center',
+    textAlign: "center",
   },
   btnTentar: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
     paddingHorizontal: Espacamento.lg,
     paddingVertical: Espacamento.sm,
@@ -610,11 +602,11 @@ const estilos = StyleSheet.create({
 
   // ------------ FAB ------------
   fab: {
-    position: 'absolute',
+    position: "absolute",
     bottom: Espacamento.lg,
     right: Espacamento.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
     paddingHorizontal: Espacamento.md,
     paddingVertical: Espacamento.sm + 2,

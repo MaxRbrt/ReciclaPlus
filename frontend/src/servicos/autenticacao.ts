@@ -1,15 +1,15 @@
 // ============================================================
 // SERVICO: Autenticacao
 // Funcoes para login, cadastro e logout do usuario.
-// Apos login, salva o token JWT e dados do usuario no AsyncStorage.
+// Apos login, salva o token JWT no SecureStore e dados nao sensiveis no AsyncStorage.
 // ============================================================
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from './api';
 import { DadosLogin, DadosCadastro, RespostaLogin, Usuario } from '@/tipos/usuario';
+import { salvarToken, obterToken, removerToken } from './tokenSeguro';
 
-// Chaves usadas no AsyncStorage para salvar dados do usuario
-const CHAVE_TOKEN = '@reciclaplus:token';
+// Chave usada no AsyncStorage para salvar apenas dados nao sensiveis do usuario
 const CHAVE_USUARIO = '@reciclaplus:usuario';
 
 // Realiza login e salva token + usuario localmente
@@ -20,8 +20,8 @@ export async function entrar(dados: DadosLogin): Promise<RespostaLogin> {
   const resposta = await api.post<RespostaLogin>('/usuarios/login', dados);
   const { token, usuario } = resposta.data;
 
-  // Salva token e dados do usuario para uso offline e proximas requests
-  await AsyncStorage.setItem(CHAVE_TOKEN, token);
+  // Salva token em storage protegido e dados do usuario para uso local.
+  await salvarToken(token);
   await AsyncStorage.setItem(CHAVE_USUARIO, JSON.stringify(usuario));
 
   return resposta.data;
@@ -36,7 +36,7 @@ export async function cadastrar(dados: DadosCadastro): Promise<Usuario> {
 // Remove dados locais do usuario (efetua logout)
 export async function sair(): Promise<void> {
   await Promise.all([
-    AsyncStorage.removeItem(CHAVE_TOKEN),
+    removerToken(),
     AsyncStorage.removeItem(CHAVE_USUARIO),
   ]);
 }
@@ -49,6 +49,6 @@ export async function recuperarUsuarioLocal(): Promise<Usuario | null> {
 
 // Verifica se ha token salvo (usuario ja logou antes)
 export async function estaAutenticado(): Promise<boolean> {
-  const token = await AsyncStorage.getItem(CHAVE_TOKEN);
+  const token = await obterToken();
   return token !== null;
 }
