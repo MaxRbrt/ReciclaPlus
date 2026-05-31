@@ -1,22 +1,5 @@
-// ============================================================
-// TELA: Detalhes do Ponto — VERSAO COM FOTO + ERRO MELHORADO
-// Rota: /ponto/[id]
-//
-// MUDANCAS:
-//   1. Mostra a FOTO do ponto no topo (ponto.fotoUrl):
-//        - Se houver URL: <Image>
-//        - Se nao: placeholder verde com icone recycle
-//   2. Erro nao chama mais router.back() automatico:
-//        - Antes: qualquer falha de rede ja voltava pra tela
-//          anterior, dando impressao de "tela em branco".
-//        - Agora: mostra mensagem de erro com botao
-//          "Tentar novamente" e botao "Voltar".
-//   3. Coordenadas exibidas no card de localizacao.
-//
-// CAMPOS RENDERIZADOS (todos do tipo Ponto):
-//   foto, nome, status, bairro, endereco, horario,
-//   descricao, categorias, latitude/longitude.
-// ============================================================
+// Tela de detalhes do ponto.
+// Exibe foto, dados, favoritos e acoes de gerenciamento.
 
 import {
   View,
@@ -62,9 +45,7 @@ export default function TelaDetalhesPonto() {
   const [salvando, setSalvando] = useState(false);
   const [excluindo, setExcluindo] = useState(false);
 
-  // Carrega ponto e status de favorito. Em caso de erro,
-  // armazena no state em vez de voltar imediatamente — usuario
-  // pode tentar novamente.
+  // Em caso de erro, mostra uma tela recuperavel em vez de voltar sozinho.
   async function carregar() {
     setCarregando(true);
     setErro(null);
@@ -113,15 +94,12 @@ export default function TelaDetalhesPonto() {
     }
   }
 
-  // Abre a tela separada de edicao. A permissao real tambem sera
-  // validada no backend, mas aqui so exibimos a acao para o dono.
   function aoEditarPonto() {
     if (!ponto) return;
     router.push(`/ponto/editar/${ponto.id}`);
   }
 
-  // Excluir ponto e uma acao destrutiva: primeiro pedimos confirmacao,
-  // depois chamamos DELETE /pontos/:id e voltamos para a lista.
+  // Acao destrutiva: confirma antes de chamar DELETE /pontos/:id.
   function aoConfirmarExcluir() {
     if (!ponto) return;
 
@@ -150,8 +128,6 @@ export default function TelaDetalhesPonto() {
       ]
     );
   }
-
-  // -------- Estados especiais --------
 
   if (carregando) {
     return (
@@ -194,19 +170,13 @@ export default function TelaDetalhesPonto() {
 
   if (!ponto) return null;
 
-  // ------- Conteudo normal -------
-
-  // Tem foto valida? string nao vazia e parece URL.
   const temFoto = !!ponto.fotoUrl && ponto.fotoUrl.trim().length > 0;
-  const podeGerenciar = Boolean(usuario && ponto.usuarioId === usuario.id);
+  const estaLogado = Boolean(usuario);
 
   return (
     <View style={estilos.raiz}>
       <ScrollView showsVerticalScrollIndicator={false}>
 
-        {/* ============================================ */}
-        {/* FOTO DO PONTO (ou placeholder)               */}
-        {/* ============================================ */}
         <View style={estilos.fotoContainer}>
           {temFoto ? (
             <Image
@@ -225,7 +195,6 @@ export default function TelaDetalhesPonto() {
             </View>
           )}
 
-          {/* Overlay com botoes voltar/favorito */}
           <View style={estilos.fotoOverlay}>
             <TouchableOpacity
               style={estilos.btnFlutuante}
@@ -255,9 +224,6 @@ export default function TelaDetalhesPonto() {
           </View>
         </View>
 
-        {/* ============================================ */}
-        {/* HEADER COM NOME + STATUS                      */}
-        {/* ============================================ */}
         <View style={estilos.header}>
           <View
             style={[
@@ -307,12 +273,8 @@ export default function TelaDetalhesPonto() {
           </View>
         </View>
 
-        {/* ============================================ */}
-        {/* CONTEUDO                                       */}
-        {/* ============================================ */}
         <View style={estilos.conteudo}>
 
-          {/* Informacoes */}
           <View style={estilos.secao}>
             <Text style={estilos.secaoTitulo}>Informacoes</Text>
 
@@ -362,7 +324,6 @@ export default function TelaDetalhesPonto() {
             ) : null}
           </View>
 
-          {/* Categorias aceitas */}
           {ponto.categorias?.length > 0 && (
             <View style={estilos.secao}>
               <Text style={estilos.secaoTitulo}>Materiais aceitos</Text>
@@ -403,7 +364,6 @@ export default function TelaDetalhesPonto() {
             </View>
           )}
 
-          {/* Coordenadas */}
           <View style={[estilos.secao, estilos.coordBox]}>
             <MaterialCommunityIcons
               name="crosshairs-gps"
@@ -415,8 +375,8 @@ export default function TelaDetalhesPonto() {
             </Text>
           </View>
 
-          {/* Gerenciamento do ponto: apenas o usuario que cadastrou ve. */}
-          {podeGerenciar ? (
+          {/* Gerenciar: disponivel para qualquer usuario logado. */}
+          {estaLogado ? (
             <View style={[estilos.secao, estilos.gerenciarBox]}>
               <View style={estilos.gerenciarCabecalho}>
                 <MaterialCommunityIcons
@@ -427,7 +387,7 @@ export default function TelaDetalhesPonto() {
                 <View style={estilos.gerenciarTextoArea}>
                   <Text style={estilos.gerenciarTitulo}>Gerenciar ponto</Text>
                   <Text style={estilos.gerenciarSub}>
-                    Este ponto foi cadastrado pela sua conta.
+                    Edite ou exclua as informacoes deste ponto.
                   </Text>
                 </View>
               </View>
@@ -475,9 +435,6 @@ export default function TelaDetalhesPonto() {
         </View>
       </ScrollView>
 
-      {/* ============================================ */}
-      {/* BOTAO FIXO: FAVORITAR                         */}
-      {/* ============================================ */}
       <View style={estilos.rodape}>
         <TouchableOpacity
           style={[
@@ -516,13 +473,9 @@ export default function TelaDetalhesPonto() {
   );
 }
 
-// ============================================================
-// ESTILOS
-// ============================================================
 const estilos = StyleSheet.create({
   raiz: { flex: 1, backgroundColor: Cores.cinzaClaro },
 
-  // -------- Loading / Erro --------
   loading: {
     flex: 1,
     alignItems: 'center',
@@ -580,7 +533,6 @@ const estilos = StyleSheet.create({
     fontWeight: Fontes.negrito,
   },
 
-  // -------- Foto --------
   fotoContainer: {
     width: '100%',
     height: 240,
@@ -621,7 +573,6 @@ const estilos = StyleSheet.create({
     ...Sombra.padrao,
   },
 
-  // -------- Header --------
   header: {
     backgroundColor: Cores.branco,
     paddingHorizontal: Espacamento.lg,
@@ -667,7 +618,6 @@ const estilos = StyleSheet.create({
     color: Cores.cinzaMedio,
   },
 
-  // -------- Conteudo --------
   conteudo: { padding: Espacamento.lg, paddingTop: Espacamento.md },
 
   secao: { marginBottom: Espacamento.lg },
@@ -678,7 +628,6 @@ const estilos = StyleSheet.create({
     marginBottom: Espacamento.sm,
   },
 
-  // Item de info
   infoItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -705,7 +654,6 @@ const estilos = StyleSheet.create({
     marginTop: 2,
   },
 
-  // Categorias
   categoriasGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -725,7 +673,6 @@ const estilos = StyleSheet.create({
     fontWeight: Fontes.negrito,
   },
 
-  // Coordenadas
   coordBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -736,7 +683,6 @@ const estilos = StyleSheet.create({
     color: Cores.cinzaMedio,
   },
 
-  // -------- Gerenciamento --------
   gerenciarBox: {
     backgroundColor: Cores.branco,
     borderRadius: Bordas.raio,
@@ -797,7 +743,6 @@ const estilos = StyleSheet.create({
     fontWeight: Fontes.negrito,
   },
 
-  // Rodape fixo
   rodape: {
     padding: Espacamento.lg,
     backgroundColor: Cores.branco,

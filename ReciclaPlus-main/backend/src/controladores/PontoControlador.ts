@@ -1,21 +1,17 @@
-// ============================================================
-// CONTROLADOR: Ponto de Coleta
-// Logica de negocio para CRUD de pontos.
-// ============================================================
+// Controlador HTTP para pontos de coleta.
 
 import { Request, Response } from 'express';
 import { PontoModelo } from '../modelos/PontoModelo';
 
 export const PontoControlador = {
 
-  // GET /pontos — Listar todos (filtro opcional por categoriaId)
   async listar(req: Request, res: Response): Promise<void> {
     const categoriaId = req.query.categoriaId ? Number(req.query.categoriaId) : undefined;
     const pontos = await PontoModelo.listar(categoriaId);
     res.json(pontos);
   },
 
-  // GET /pontos/:id — Buscar ponto especifico com categorias
+  // Retorna o ponto com suas categorias carregadas.
   async buscar(req: Request, res: Response): Promise<void> {
     const ponto = await PontoModelo.buscarPorId(Number(req.params.id));
     if (!ponto) {
@@ -25,7 +21,6 @@ export const PontoControlador = {
     res.json(ponto);
   },
 
-  // POST /pontos — Criar novo ponto (usuario autenticado)
   async criar(req: Request, res: Response): Promise<void> {
     const dados = { ...req.body, usuarioId: req.usuarioId };
     const { id } = await PontoModelo.criar(dados);
@@ -33,22 +28,22 @@ export const PontoControlador = {
     res.status(201).json(ponto);
   },
 
-  // PUT /pontos/:id — Atualizar ponto existente
+  // A rota exige autenticacao; o modelo atualiza pelo id do ponto.
   async atualizar(req: Request, res: Response): Promise<void> {
-    const atualizado = await PontoModelo.atualizar(Number(req.params.id), req.usuarioId!, req.body);
+    const atualizado = await PontoModelo.atualizar(Number(req.params.id), req.body);
     if (!atualizado) {
-      res.status(404).json({ erro: 'Ponto nao encontrado para este usuario.' });
+      res.status(404).json({ erro: 'Ponto nao encontrado.' });
       return;
     }
     const ponto = await PontoModelo.buscarPorId(Number(req.params.id));
     res.json(ponto);
   },
 
-  // DELETE /pontos/:id — Remover ponto
+  // A rota exige autenticacao; o modelo remove pelo id do ponto.
   async remover(req: Request, res: Response): Promise<void> {
-    const removido = await PontoModelo.remover(Number(req.params.id), req.usuarioId!);
+    const removido = await PontoModelo.remover(Number(req.params.id));
     if (!removido) {
-      res.status(404).json({ erro: 'Ponto nao encontrado para este usuario.' });
+      res.status(404).json({ erro: 'Ponto nao encontrado.' });
       return;
     }
     res.status(204).send();

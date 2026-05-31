@@ -1,38 +1,28 @@
-// ============================================================
-// TELA: Editar Ponto
-// Rota: /ponto/editar/[id]
-//
-// RESPONSABILIDADES:
-//   1. Buscar os dados atuais do ponto pelo ID da rota.
-//   2. Preencher o formulario com nome, descricao, endereco,
-//      bairro, horario, foto, coordenadas e categorias atuais.
-//   3. Permitir que o dono do ponto altere esses dados.
-//   4. Enviar a edicao para PUT /pontos/:id.
-//
-// OBSERVACAO DE SEGURANCA:
-//   - O frontend esconde a edicao para quem nao e dono.
-//   - O backend tambem valida usuario_id antes de atualizar.
-//     Essa segunda validacao e a que realmente protege os dados.
-// ============================================================
+// Tela de edicao de ponto.
+// Qualquer usuario logado pode editar no fluxo colaborativo do app.
 
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  TextInput,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  Image,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
-import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { buscarPonto, atualizarPonto } from '@/servicos/pontos';
-import { CATEGORIAS } from '@/constantes/categorias';
+import { CamposFormularioPonto } from '@/componentes/CamposFormularioPonto';
+import { FotoPontoInput } from '@/componentes/FotoPontoInput';
+import { SelecionadorCategorias } from '@/componentes/SelecionadorCategorias';
+import {
+  capturarFotoPonto,
+  escolherFotoPontoDaGaleria,
+} from '@/servicos/fotoPonto';
+import { preencherEnderecoSeVazio } from '@/servicos/localizacao';
 import { Cores, Fontes, Espacamento, Bordas, Sombra } from '@/constantes/tema';
 import { useAutenticacao } from '@/hooks/useAutenticacao';
 import { Ponto } from '@/tipos/ponto';
@@ -41,14 +31,12 @@ export default function TelaEditarPonto() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { usuario } = useAutenticacao();
 
-  // Estados da tela: carregamento inicial, erro e salvamento.
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [pegandoGPS, setPegandoGPS] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [pontoOriginal, setPontoOriginal] = useState<Ponto | null>(null);
 
-  // Estados do formulario. Eles espelham os campos aceitos pelo backend.
   const [nome, setNome] = useState('');
   const [descricao, setDescricao] = useState('');
   const [endereco, setEndereco] = useState('');
@@ -59,9 +47,6 @@ export default function TelaEditarPonto() {
   const [longitude, setLongitude] = useState<number | null>(null);
   const [categorias, setCategorias] = useState<number[]>([]);
 
-  // ------------------------------------------------------------
-  // Carregamento inicial
-  // ------------------------------------------------------------
   useEffect(() => {
     let ativo = true;
 
@@ -72,12 +57,6 @@ export default function TelaEditarPonto() {
       try {
         const dados = await buscarPonto(Number(id));
         if (!ativo) return;
-
-        if (usuario && dados.usuarioId !== usuario.id) {
-          setErro('Voce so pode editar pontos cadastrados pela sua conta.');
-          setPontoOriginal(null);
-          return;
-        }
 
         setPontoOriginal(dados);
         preencherFormulario(dados);
@@ -99,9 +78,7 @@ export default function TelaEditarPonto() {
     };
   }, [id, usuario]);
 
-  // Copia os dados do ponto para os states editaveis.
-  // Manter essa funcao separada deixa claro o limite entre
-  // "dado vindo da API" e "dado alteravel no formulario".
+  // Copia o dado da API para os campos editaveis.
   function preencherFormulario(ponto: Ponto) {
     setNome(ponto.nome ?? '');
     setDescricao(ponto.descricao ?? '');
@@ -114,9 +91,6 @@ export default function TelaEditarPonto() {
     setCategorias(ponto.categorias?.map(cat => cat.id) ?? []);
   }
 
-  // ------------------------------------------------------------
-  // Categorias
-  // ------------------------------------------------------------
   function toggleCategoria(idCategoria: number) {
     setCategorias(prev =>
       prev.includes(idCategoria)
@@ -125,9 +99,10 @@ export default function TelaEditarPonto() {
     );
   }
 
-  // ------------------------------------------------------------
-  // Foto
-  // ------------------------------------------------------------
+  async function preencherEnderecoPorCoords(lat: number, lng: number) {
+    await preencherEnderecoSeVazio(lat, lng, setEndereco, setBairro);
+  }
+
   function aoTocarFoto() {
     Alert.alert(
       'Foto do ponto',
@@ -143,46 +118,15 @@ export default function TelaEditarPonto() {
   }
 
   async function capturarComCamera() {
-    const permissao = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permissao.granted) {
-      Alert.alert('Permissao negada', 'Permita acesso a camera nas configuracoes do app.');
-      return;
-    }
-
-    const resultado = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
-
-    if (!resultado.canceled && resultado.assets?.[0]) {
-      setFotoUri(resultado.assets[0].uri);
-    }
+    const uri = await capturarFotoPonto();
+    if (uri) setFotoUri(uri);
   }
 
   async function escolherDaGaleria() {
-    const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissao.granted) {
-      Alert.alert('Permissao negada', 'Permita acesso a galeria nas configuracoes do app.');
-      return;
-    }
-
-    const resultado = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
-
-    if (!resultado.canceled && resultado.assets?.[0]) {
-      setFotoUri(resultado.assets[0].uri);
-    }
+    const uri = await escolherFotoPontoDaGaleria();
+    if (uri) setFotoUri(uri);
   }
 
-  // ------------------------------------------------------------
-  // Localizacao
-  // ------------------------------------------------------------
   async function aoCapturarGPS() {
     setPegandoGPS(true);
 
@@ -198,6 +142,7 @@ export default function TelaEditarPonto() {
       });
       setLatitude(loc.coords.latitude);
       setLongitude(loc.coords.longitude);
+      await preencherEnderecoPorCoords(loc.coords.latitude, loc.coords.longitude);
     } catch {
       Alert.alert('Erro', 'Nao foi possivel obter a localizacao.');
     } finally {
@@ -205,9 +150,6 @@ export default function TelaEditarPonto() {
     }
   }
 
-  // ------------------------------------------------------------
-  // Validacao e envio
-  // ------------------------------------------------------------
   function validar(): boolean {
     if (!nome.trim()) {
       Alert.alert('Campos obrigatorios', 'Informe o nome do ponto.');
@@ -259,9 +201,6 @@ export default function TelaEditarPonto() {
     }
   }
 
-  // ------------------------------------------------------------
-  // Estados especiais
-  // ------------------------------------------------------------
   if (carregando) {
     return (
       <View style={estilos.estadoCentral}>
@@ -286,7 +225,6 @@ export default function TelaEditarPonto() {
 
   return (
     <View style={estilos.raiz}>
-      {/* Header fixo da tela */}
       <View style={estilos.header}>
         <TouchableOpacity style={estilos.voltarBtn} onPress={() => router.back()}>
           <MaterialCommunityIcons name="arrow-left" size={24} color={Cores.branco} />
@@ -304,87 +242,21 @@ export default function TelaEditarPonto() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Foto atual ou placeholder */}
-        <TouchableOpacity style={estilos.fotoArea} onPress={aoTocarFoto} activeOpacity={0.85}>
-          {fotoUri ? (
-            <>
-              <Image source={{ uri: fotoUri }} style={estilos.fotoImagem} />
-              <View style={estilos.fotoOverlay}>
-                <View style={estilos.fotoBadge}>
-                  <MaterialCommunityIcons name="camera-retake" size={16} color={Cores.branco} />
-                  <Text style={estilos.fotoBadgeTexto}>Trocar foto</Text>
-                </View>
-              </View>
-            </>
-          ) : (
-            <View style={estilos.fotoPlaceholder}>
-              <MaterialCommunityIcons name="camera-plus" size={36} color={Cores.primaria} />
-              <Text style={estilos.fotoTitulo}>Adicionar foto do ponto</Text>
-              <Text style={estilos.fotoSub}>Toque para tirar foto ou escolher da galeria</Text>
-            </View>
-          )}
-        </TouchableOpacity>
+        <FotoPontoInput fotoUri={fotoUri} onPress={aoTocarFoto} />
 
-        {/* Dados basicos */}
-        <View style={estilos.grupo}>
-          <Text style={estilos.label}>Nome do ponto *</Text>
-          <TextInput
-            style={estilos.input}
-            value={nome}
-            onChangeText={setNome}
-            placeholder="Ex: Ecoponto Centro"
-            placeholderTextColor={Cores.cinzaMedio}
-          />
-        </View>
+        <CamposFormularioPonto
+          nome={nome}
+          descricao={descricao}
+          endereco={endereco}
+          bairro={bairro}
+          horario={horario}
+          setNome={setNome}
+          setDescricao={setDescricao}
+          setEndereco={setEndereco}
+          setBairro={setBairro}
+          setHorario={setHorario}
+        />
 
-        <View style={estilos.grupo}>
-          <Text style={estilos.label}>Descricao</Text>
-          <TextInput
-            style={[estilos.input, estilos.inputMultilinha]}
-            value={descricao}
-            onChangeText={setDescricao}
-            placeholder="Informacoes adicionais sobre o ponto..."
-            placeholderTextColor={Cores.cinzaMedio}
-            multiline
-            numberOfLines={3}
-            textAlignVertical="top"
-          />
-        </View>
-
-        <View style={estilos.grupo}>
-          <Text style={estilos.label}>Endereco *</Text>
-          <TextInput
-            style={estilos.input}
-            value={endereco}
-            onChangeText={setEndereco}
-            placeholder="Rua, numero"
-            placeholderTextColor={Cores.cinzaMedio}
-          />
-        </View>
-
-        <View style={estilos.grupo}>
-          <Text style={estilos.label}>Bairro *</Text>
-          <TextInput
-            style={estilos.input}
-            value={bairro}
-            onChangeText={setBairro}
-            placeholder="Nome do bairro"
-            placeholderTextColor={Cores.cinzaMedio}
-          />
-        </View>
-
-        <View style={estilos.grupo}>
-          <Text style={estilos.label}>Horario de funcionamento</Text>
-          <TextInput
-            style={estilos.input}
-            value={horario}
-            onChangeText={setHorario}
-            placeholder="Ex: Seg a Sex, 08:00 - 18:00"
-            placeholderTextColor={Cores.cinzaMedio}
-          />
-        </View>
-
-        {/* Localizacao GPS */}
         <View style={estilos.grupo}>
           <Text style={estilos.label}>Localizacao GPS *</Text>
           <TouchableOpacity
@@ -415,37 +287,14 @@ export default function TelaEditarPonto() {
           </TouchableOpacity>
         </View>
 
-        {/* Categorias aceitas */}
         <View style={estilos.grupo}>
           <Text style={estilos.label}>Materiais aceitos *</Text>
-          <View style={estilos.categoriasGrid}>
-            {CATEGORIAS.map(cat => {
-              const selecionado = categorias.includes(cat.id);
-              return (
-                <TouchableOpacity
-                  key={cat.id}
-                  style={[
-                    estilos.catChip,
-                    selecionado && { backgroundColor: cat.cor, borderColor: cat.cor },
-                  ]}
-                  onPress={() => toggleCategoria(cat.id)}
-                  activeOpacity={0.8}
-                >
-                  <MaterialCommunityIcons
-                    name={cat.icone as any}
-                    size={16}
-                    color={selecionado ? Cores.branco : cat.cor}
-                  />
-                  <Text style={[estilos.catChipTexto, selecionado && { color: Cores.branco }]}>
-                    {cat.nome}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+          <SelecionadorCategorias
+            selecionadas={categorias}
+            aoAlternar={toggleCategoria}
+          />
         </View>
 
-        {/* Acao principal */}
         <TouchableOpacity
           style={[estilos.btnSalvar, salvando && estilos.btnDesabilitado]}
           onPress={aoSalvar}
@@ -466,11 +315,6 @@ export default function TelaEditarPonto() {
   );
 }
 
-// ============================================================
-// ESTILOS
-// Mantem a linguagem visual do formulario de novo ponto, mas
-// adiciona estados de carregamento/erro e textos de contexto.
-// ============================================================
 const estilos = StyleSheet.create({
   raiz: { flex: 1, backgroundColor: Cores.cinzaClaro },
 
@@ -537,56 +381,6 @@ const estilos = StyleSheet.create({
 
   scroll: { padding: Espacamento.lg, paddingBottom: Espacamento.xxl },
 
-  fotoArea: {
-    borderRadius: Bordas.raioGrande,
-    overflow: 'hidden',
-    marginBottom: Espacamento.lg,
-    ...Sombra.suave,
-  },
-  fotoImagem: { width: '100%', height: 200 },
-  fotoOverlay: {
-    position: 'absolute',
-    bottom: Espacamento.sm,
-    right: Espacamento.sm,
-  },
-  fotoBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    paddingHorizontal: Espacamento.sm,
-    paddingVertical: 4,
-    borderRadius: Bordas.raioTotal,
-  },
-  fotoBadgeTexto: {
-    color: Cores.branco,
-    fontSize: Fontes.pequena,
-    fontWeight: Fontes.negrito,
-  },
-  fotoPlaceholder: {
-    height: 180,
-    backgroundColor: Cores.branco,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: Cores.cinzaBorda,
-    borderStyle: 'dashed',
-    borderRadius: Bordas.raioGrande,
-    gap: 6,
-    padding: Espacamento.md,
-  },
-  fotoTitulo: {
-    fontSize: Fontes.normal,
-    color: Cores.preto,
-    fontWeight: Fontes.muitoNegrito,
-    marginTop: 4,
-  },
-  fotoSub: {
-    fontSize: Fontes.pequena,
-    color: Cores.cinzaMedio,
-    textAlign: 'center',
-  },
-
   grupo: { marginBottom: Espacamento.md },
   label: {
     fontSize: Fontes.normal,
@@ -594,21 +388,6 @@ const estilos = StyleSheet.create({
     color: Cores.cinzaEscuro,
     marginBottom: Espacamento.xs,
   },
-  input: {
-    backgroundColor: Cores.branco,
-    borderWidth: 1.5,
-    borderColor: Cores.cinzaBorda,
-    borderRadius: Bordas.raio,
-    paddingHorizontal: Espacamento.md,
-    height: 48,
-    fontSize: Fontes.normal,
-    color: Cores.preto,
-  },
-  inputMultilinha: {
-    height: 90,
-    paddingTop: Espacamento.sm,
-  },
-
   btnGPS: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -634,28 +413,6 @@ const estilos = StyleSheet.create({
     fontSize: Fontes.pequena,
     color: Cores.cinzaMedio,
     marginTop: 1,
-  },
-
-  categoriasGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Espacamento.sm,
-  },
-  catChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    borderWidth: 1.5,
-    borderColor: Cores.cinzaBorda,
-    borderRadius: Bordas.raioTotal,
-    paddingHorizontal: Espacamento.sm,
-    paddingVertical: 7,
-    backgroundColor: Cores.branco,
-  },
-  catChipTexto: {
-    fontSize: Fontes.pequena,
-    fontWeight: Fontes.medio_peso,
-    color: Cores.cinzaEscuro,
   },
 
   btnSalvar: {

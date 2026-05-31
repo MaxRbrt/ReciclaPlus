@@ -1,10 +1,8 @@
-// ============================================================
-// MODELO: Ponto de Coleta
-// Queries SQL para CRUD de pontos + busca de categorias.
-// ============================================================
+// Queries SQL para pontos de coleta e suas categorias.
 
 import { pool } from '../configuracao/bancoDados';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
+import { PoolConnection } from 'mysql2/promise';
 
 interface PontoDB extends RowDataPacket {
   id: number;
@@ -77,11 +75,28 @@ async function anexarCategorias(pontos: PontoDB[]): Promise<PontoComCategorias[]
   }));
 }
 
+function normalizarCategoriaIds(categoriaIds?: number[]): number[] {
+  return [...new Set((categoriaIds ?? []).map(Number))]
+    .filter((id): id is number => Number.isInteger(id));
+}
+
+async function inserirCategoriasDoPonto(
+  conn: PoolConnection,
+  pontoId: number,
+  categoriaIds: number[]
+): Promise<void> {
+  for (const categoriaId of categoriaIds) {
+    await conn.execute(
+      'INSERT INTO ponto_categorias (ponto_id, categoria_id) VALUES (?, ?)',
+      [pontoId, categoriaId]
+    );
+  }
+}
+
 export const PontoModelo = {
 
   async listar(categoriaId?: number): Promise<PontoComCategorias[]> {
     if (categoriaId) {
-      // Filtra por categoria usando JOIN com tabela ponto_categorias
       const [linhas] = await pool.execute<PontoDB[]>(`
         SELECT DISTINCT ${COLUNAS_PONTO}
         FROM pontos_coleta p
@@ -127,15 +142,11 @@ export const PontoModelo = {
       ]);
 
       const pontoId = resultado.insertId;
-      const categoriaIds = [...new Set((dados.categoriaIds ?? []).map(Number))]
-        .filter((id): id is number => Number.isInteger(id));
-
-      for (const categoriaId of categoriaIds) {
-        await conn.execute(
-          'INSERT INTO ponto_categorias (ponto_id, categoria_id) VALUES (?, ?)',
-          [pontoId, categoriaId]
-        );
-      }
+      await inserirCategoriasDoPonto(
+        conn,
+        pontoId,
+        normalizarCategoriaIds(dados.categoriaIds)
+      );
 
       await conn.commit();
       return { id: pontoId };
@@ -147,7 +158,7 @@ export const PontoModelo = {
     }
   },
 
-  async atualizar(id: number, usuarioId: number, dados: Partial<{
+  async atualizar(id: number, dados: Partial<{
     nome: string;
     descricao: string;
     endereco: string;
@@ -164,11 +175,9 @@ export const PontoModelo = {
     try {
       await conn.beginTransaction();
 
-      // Primeiro confirma se o ponto existe e pertence ao usuario logado.
-      // Isso evita que um usuario edite pontos cadastrados por outra conta.
       const [pontos] = await conn.execute<PontoDB[]>(
-        'SELECT * FROM pontos_coleta WHERE id = ? AND usuario_id = ? LIMIT 1',
-        [id, usuarioId]
+        'SELECT * FROM pontos_coleta WHERE id = ? LIMIT 1',
+        [id]
       );
 
       if (pontos.length === 0) {
@@ -176,9 +185,7 @@ export const PontoModelo = {
         return false;
       }
 
-      // COALESCE mantem o valor atual quando algum campo nao foi enviado.
-      // Usamos null em vez de undefined porque mysql2 nao aceita undefined
-      // como parametro de query preparada.
+      // mysql2 nao aceita undefined em query preparada.
       await conn.execute<ResultSetHeader>(`
         UPDATE pontos_coleta
         SET
@@ -191,7 +198,7 @@ export const PontoModelo = {
           foto_url = COALESCE(?, foto_url),
           horario_funcionamento = COALESCE(?, horario_funcionamento),
           status = COALESCE(?, status)
-        WHERE id = ? AND usuario_id = ?
+        WHERE id = ?
       `, [
         dados.nome ?? null,
         dados.descricao ?? null,
@@ -203,24 +210,16 @@ export const PontoModelo = {
         dados.horarioFuncionamento ?? null,
         dados.status ?? null,
         id,
-        usuarioId,
       ]);
 
-      // Se categoriaIds veio no payload, substitui a lista inteira.
-      // Essa regra simplifica o contrato: o frontend sempre manda a
-      // selecao final de categorias, e o backend sincroniza a tabela pivô.
+      // Quando categoriaIds vem no payload, ele representa a selecao final.
       if (Array.isArray(dados.categoriaIds)) {
-        const categoriaIds = [...new Set(dados.categoriaIds.map(Number))]
-          .filter((categoriaId): categoriaId is number => Number.isInteger(categoriaId));
-
         await conn.execute('DELETE FROM ponto_categorias WHERE ponto_id = ?', [id]);
-
-        for (const categoriaId of categoriaIds) {
-          await conn.execute(
-            'INSERT INTO ponto_categorias (ponto_id, categoria_id) VALUES (?, ?)',
-            [id, categoriaId]
-          );
-        }
+        await inserirCategoriasDoPonto(
+          conn,
+          id,
+          normalizarCategoriaIds(dados.categoriaIds)
+        );
       }
 
       await conn.commit();
@@ -233,15 +232,15 @@ export const PontoModelo = {
     }
   },
 
-  async remover(id: number, usuarioId: number): Promise<boolean> {
+  async remover(id: number): Promise<boolean> {
     const conn = await pool.getConnection();
 
     try {
       await conn.beginTransaction();
 
       const [pontos] = await conn.execute<PontoDB[]>(
-        'SELECT * FROM pontos_coleta WHERE id = ? AND usuario_id = ? LIMIT 1',
-        [id, usuarioId]
+        'SELECT * FROM pontos_coleta WHERE id = ? LIMIT 1',
+        [id]
       );
 
       if (pontos.length === 0) {
@@ -251,7 +250,7 @@ export const PontoModelo = {
 
       await conn.execute('DELETE FROM ponto_categorias WHERE ponto_id = ?', [id]);
       await conn.execute('DELETE FROM favoritos WHERE ponto_id = ?', [id]);
-      await conn.execute('DELETE FROM pontos_coleta WHERE id = ? AND usuario_id = ?', [id, usuarioId]);
+      await conn.execute('DELETE FROM pontos_coleta WHERE id = ?', [id]);
 
       await conn.commit();
       return true;

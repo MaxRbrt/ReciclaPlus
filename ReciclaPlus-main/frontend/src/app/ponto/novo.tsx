@@ -1,44 +1,31 @@
-// ============================================================
-// TELA: Cadastrar Novo Ponto — VERSAO COM CAMERA + PRE-FILL
-// Rota: /ponto/novo
-//   query params opcionais: ?lat=...&lng=...
-//
-// NOVIDADES:
-//   1. Pre-preenche latitude/longitude se vier do mapa
-//      (tela /(abas)/mapa.tsx passa as coords ao tocar).
-//   2. Botao de foto agora oferece 3 opcoes via Alert:
-//        - Tirar foto (camera ao vivo, NECESSARIO para o trabalho)
-//        - Escolher da galeria
-//        - Cancelar
-//      Cada caminho pede sua propria permissao.
-//   3. Pre-visualizacao da foto com botao para trocar.
-//
-// PERMISSOES no app.json:
-//   plugin expo-image-picker injeta camera+photos permissions.
-// ============================================================
+// Tela de cadastro de ponto.
+// Pode receber ?lat=...&lng=... quando aberta a partir do mapa.
 
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  TextInput,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  Image,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
-import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { cadastrarPonto } from '@/servicos/pontos';
-import { CATEGORIAS } from '@/constantes/categorias';
+import { CamposFormularioPonto } from '@/componentes/CamposFormularioPonto';
+import { FotoPontoInput } from '@/componentes/FotoPontoInput';
+import { SelecionadorCategorias } from '@/componentes/SelecionadorCategorias';
+import {
+  capturarFotoPonto,
+  escolherFotoPontoDaGaleria,
+} from '@/servicos/fotoPonto';
+import { preencherEnderecoSeVazio } from '@/servicos/localizacao';
 import { Cores, Fontes, Espacamento, Bordas, Sombra } from '@/constantes/tema';
 
 export default function TelaNovoPonto() {
-  // Le coords opcionais vindas do mapa (?lat=...&lng=...)
   const params = useLocalSearchParams<{ lat?: string; lng?: string }>();
 
   const [nome, setNome] = useState('');
@@ -53,15 +40,15 @@ export default function TelaNovoPonto() {
   const [salvando, setSalvando] = useState(false);
   const [pegandoGPS, setPegandoGPS] = useState(false);
 
-  // Pre-preenche coordenadas ao montar (se vier do mapa)
+  // Se a tela veio do mapa, usa as coordenadas tocadas como ponto inicial.
   useEffect(() => {
     if (params.lat && params.lng) {
       const lat = Number(params.lat);
       const lng = Number(params.lng);
-      // So aplica se forem numeros validos
       if (!isNaN(lat) && !isNaN(lng)) {
         setLatitude(lat);
         setLongitude(lng);
+        preencherEnderecoPorCoords(lat, lng);
       }
     }
   }, [params.lat, params.lng]);
@@ -72,12 +59,11 @@ export default function TelaNovoPonto() {
     );
   }
 
-  // ========================================
-  // FOTO: 3 opcoes (camera / galeria / cancelar)
-  // ========================================
+  async function preencherEnderecoPorCoords(lat: number, lng: number) {
+    await preencherEnderecoSeVazio(lat, lng, setEndereco, setBairro);
+  }
 
-  // Abre Alert com as opcoes. Atende exigencia do trabalho:
-  // usuario pode tirar foto AO VIVO no local do ponto.
+  // Mantem camera e galeria como opcoes explicitas para o usuario.
   function aoTocarFoto() {
     Alert.alert(
       'Foto do ponto',
@@ -91,56 +77,16 @@ export default function TelaNovoPonto() {
     );
   }
 
-  // --- Camera ao vivo ---
   async function capturarComCamera() {
-    // Pede permissao especifica de camera (diferente de galeria)
-    const permissao = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permissao.granted) {
-      Alert.alert(
-        'Permissao negada',
-        'Permita acesso a camera nas configuracoes do app.'
-      );
-      return;
-    }
-
-    const resultado = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
-
-    if (!resultado.canceled && resultado.assets?.[0]) {
-      setFotoUri(resultado.assets[0].uri);
-    }
+    const uri = await capturarFotoPonto();
+    if (uri) setFotoUri(uri);
   }
 
-  // --- Galeria ---
   async function escolherDaGaleria() {
-    const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissao.granted) {
-      Alert.alert(
-        'Permissao negada',
-        'Permita acesso a galeria nas configuracoes do app.'
-      );
-      return;
-    }
-
-    const resultado = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
-
-    if (!resultado.canceled && resultado.assets?.[0]) {
-      setFotoUri(resultado.assets[0].uri);
-    }
+    const uri = await escolherFotoPontoDaGaleria();
+    if (uri) setFotoUri(uri);
   }
 
-  // ========================================
-  // GPS atual (botao se quiser re-capturar)
-  // ========================================
   async function aoCapturarGPS() {
     setPegandoGPS(true);
     try {
@@ -157,6 +103,7 @@ export default function TelaNovoPonto() {
       });
       setLatitude(loc.coords.latitude);
       setLongitude(loc.coords.longitude);
+      await preencherEnderecoPorCoords(loc.coords.latitude, loc.coords.longitude);
     } catch {
       Alert.alert('Erro', 'Nao foi possivel obter a localizacao.');
     } finally {
@@ -219,12 +166,10 @@ export default function TelaNovoPonto() {
     }
   }
 
-  // Indica se as coordenadas vieram via tap no mapa
   const coordsVemDoMapa = Boolean(params.lat && params.lng);
 
   return (
     <View style={estilos.raiz}>
-      {/* Header */}
       <View style={estilos.header}>
         <TouchableOpacity
           style={estilos.voltarBtn}
@@ -244,119 +189,25 @@ export default function TelaNovoPonto() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* ============================================ */}
-        {/* FOTO — tirar com camera ou escolher galeria  */}
-        {/* ============================================ */}
-        <TouchableOpacity
-          style={estilos.fotoArea}
-          onPress={aoTocarFoto}
-          activeOpacity={0.85}
-        >
-          {fotoUri ? (
-            <>
-              <Image source={{ uri: fotoUri }} style={estilos.fotoImagem} />
-              {/* Overlay com botao de trocar */}
-              <View style={estilos.fotoOverlay}>
-                <View style={estilos.fotoBadge}>
-                  <MaterialCommunityIcons
-                    name="camera-retake"
-                    size={16}
-                    color={Cores.branco}
-                  />
-                  <Text style={estilos.fotoBadgeTexto}>Trocar foto</Text>
-                </View>
-              </View>
-            </>
-          ) : (
-            <View style={estilos.fotoPlaceholder}>
-              <View style={estilos.fotoIconRow}>
-                <MaterialCommunityIcons
-                  name="camera"
-                  size={28}
-                  color={Cores.primaria}
-                />
-                <Text style={estilos.fotoSeparador}>ou</Text>
-                <MaterialCommunityIcons
-                  name="image-multiple"
-                  size={28}
-                  color={Cores.primaria}
-                />
-              </View>
-              <Text style={estilos.fotoTitulo}>Adicionar foto do ponto</Text>
-              <Text style={estilos.fotoSub}>
-                Toque para tirar uma foto ou escolher da galeria
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
+        <FotoPontoInput fotoUri={fotoUri} onPress={aoTocarFoto} />
 
-        {/* Campos */}
-        <View style={estilos.grupo}>
-          <Text style={estilos.label}>Nome do ponto *</Text>
-          <TextInput
-            style={estilos.input}
-            value={nome}
-            onChangeText={setNome}
-            placeholder="Ex: Ecoponto Centro"
-            placeholderTextColor={Cores.cinzaMedio}
-          />
-        </View>
+        <CamposFormularioPonto
+          nome={nome}
+          descricao={descricao}
+          endereco={endereco}
+          bairro={bairro}
+          horario={horario}
+          setNome={setNome}
+          setDescricao={setDescricao}
+          setEndereco={setEndereco}
+          setBairro={setBairro}
+          setHorario={setHorario}
+        />
 
-        <View style={estilos.grupo}>
-          <Text style={estilos.label}>Descricao</Text>
-          <TextInput
-            style={[estilos.input, estilos.inputMultilinha]}
-            value={descricao}
-            onChangeText={setDescricao}
-            placeholder="Informacoes adicionais sobre o ponto..."
-            placeholderTextColor={Cores.cinzaMedio}
-            multiline
-            numberOfLines={3}
-            textAlignVertical="top"
-          />
-        </View>
-
-        <View style={estilos.grupo}>
-          <Text style={estilos.label}>Endereco *</Text>
-          <TextInput
-            style={estilos.input}
-            value={endereco}
-            onChangeText={setEndereco}
-            placeholder="Rua, numero"
-            placeholderTextColor={Cores.cinzaMedio}
-          />
-        </View>
-
-        <View style={estilos.grupo}>
-          <Text style={estilos.label}>Bairro *</Text>
-          <TextInput
-            style={estilos.input}
-            value={bairro}
-            onChangeText={setBairro}
-            placeholder="Nome do bairro"
-            placeholderTextColor={Cores.cinzaMedio}
-          />
-        </View>
-
-        <View style={estilos.grupo}>
-          <Text style={estilos.label}>Horario de funcionamento</Text>
-          <TextInput
-            style={estilos.input}
-            value={horario}
-            onChangeText={setHorario}
-            placeholder="Ex: Seg a Sex, 08:00 - 18:00"
-            placeholderTextColor={Cores.cinzaMedio}
-          />
-        </View>
-
-        {/* ============================================ */}
-        {/* GPS — destaque se veio do mapa               */}
-        {/* ============================================ */}
         <View style={estilos.grupo}>
           <Text style={estilos.label}>Localizacao GPS *</Text>
 
           {coordsVemDoMapa && latitude ? (
-            // Caso 1: coords vieram do mapa — mostra info + opcao recapturar
             <View style={[estilos.btnGPS, estilos.btnGPSAtivo]}>
               <MaterialCommunityIcons
                 name="map-marker-check"
@@ -380,7 +231,6 @@ export default function TelaNovoPonto() {
               </TouchableOpacity>
             </View>
           ) : (
-            // Caso 2: sem coords — botao para capturar GPS atual
             <TouchableOpacity
               style={[estilos.btnGPS, latitude ? estilos.btnGPSAtivo : null]}
               onPress={aoCapturarGPS}
@@ -413,45 +263,14 @@ export default function TelaNovoPonto() {
           )}
         </View>
 
-        {/* Categorias */}
         <View style={estilos.grupo}>
           <Text style={estilos.label}>Materiais aceitos *</Text>
-          <View style={estilos.categoriasGrid}>
-            {CATEGORIAS.map(cat => {
-              const selecionado = categorias.includes(cat.id);
-              return (
-                <TouchableOpacity
-                  key={cat.id}
-                  style={[
-                    estilos.catChip,
-                    selecionado && {
-                      backgroundColor: cat.cor,
-                      borderColor: cat.cor,
-                    },
-                  ]}
-                  onPress={() => toggleCategoria(cat.id)}
-                  activeOpacity={0.8}
-                >
-                  <MaterialCommunityIcons
-                    name={cat.icone as any}
-                    size={16}
-                    color={selecionado ? Cores.branco : cat.cor}
-                  />
-                  <Text
-                    style={[
-                      estilos.catChipTexto,
-                      selecionado && { color: Cores.branco },
-                    ]}
-                  >
-                    {cat.nome}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+          <SelecionadorCategorias
+            selecionadas={categorias}
+            aoAlternar={toggleCategoria}
+          />
         </View>
 
-        {/* Botao salvar */}
         <TouchableOpacity
           style={[estilos.btnSalvar, salvando && estilos.btnDesabilitado]}
           onPress={aoSalvar}
@@ -504,68 +323,6 @@ const estilos = StyleSheet.create({
 
   scroll: { padding: Espacamento.lg, paddingBottom: Espacamento.xxl },
 
-  // ----- Foto -----
-  fotoArea: {
-    borderRadius: Bordas.raioGrande,
-    overflow: 'hidden',
-    marginBottom: Espacamento.lg,
-    ...Sombra.suave,
-  },
-  fotoImagem: { width: '100%', height: 200 },
-  fotoOverlay: {
-    position: 'absolute',
-    bottom: Espacamento.sm,
-    right: Espacamento.sm,
-  },
-  fotoBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    paddingHorizontal: Espacamento.sm,
-    paddingVertical: 4,
-    borderRadius: Bordas.raioTotal,
-  },
-  fotoBadgeTexto: {
-    color: Cores.branco,
-    fontSize: Fontes.pequena,
-    fontWeight: Fontes.negrito,
-  },
-  fotoPlaceholder: {
-    height: 180,
-    backgroundColor: Cores.branco,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: Cores.cinzaBorda,
-    borderStyle: 'dashed',
-    borderRadius: Bordas.raioGrande,
-    gap: 6,
-    padding: Espacamento.md,
-  },
-  fotoIconRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Espacamento.sm,
-  },
-  fotoSeparador: {
-    fontSize: Fontes.pequena,
-    color: Cores.cinzaMedio,
-    fontWeight: Fontes.medio_peso,
-  },
-  fotoTitulo: {
-    fontSize: Fontes.normal,
-    color: Cores.preto,
-    fontWeight: Fontes.muitoNegrito,
-    marginTop: 4,
-  },
-  fotoSub: {
-    fontSize: Fontes.pequena,
-    color: Cores.cinzaMedio,
-    textAlign: 'center',
-  },
-
-  // ----- Campos -----
   grupo: { marginBottom: Espacamento.md },
   label: {
     fontSize: Fontes.normal,
@@ -573,22 +330,6 @@ const estilos = StyleSheet.create({
     color: Cores.cinzaEscuro,
     marginBottom: Espacamento.xs,
   },
-  input: {
-    backgroundColor: Cores.branco,
-    borderWidth: 1.5,
-    borderColor: Cores.cinzaBorda,
-    borderRadius: Bordas.raio,
-    paddingHorizontal: Espacamento.md,
-    height: 48,
-    fontSize: Fontes.normal,
-    color: Cores.preto,
-  },
-  inputMultilinha: {
-    height: 90,
-    paddingTop: Espacamento.sm,
-  },
-
-  // ----- GPS -----
   btnGPS: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -623,30 +364,6 @@ const estilos = StyleSheet.create({
     textTransform: 'uppercase',
   },
 
-  // ----- Categorias -----
-  categoriasGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Espacamento.sm,
-  },
-  catChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    borderWidth: 1.5,
-    borderColor: Cores.cinzaBorda,
-    borderRadius: Bordas.raioTotal,
-    paddingHorizontal: Espacamento.sm,
-    paddingVertical: 7,
-    backgroundColor: Cores.branco,
-  },
-  catChipTexto: {
-    fontSize: Fontes.pequena,
-    fontWeight: Fontes.medio_peso,
-    color: Cores.cinzaEscuro,
-  },
-
-  // ----- Botao salvar -----
   btnSalvar: {
     flexDirection: 'row',
     alignItems: 'center',
