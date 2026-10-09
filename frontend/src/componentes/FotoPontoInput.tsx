@@ -1,12 +1,11 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import {
-  Image,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { Cores, Fontes, Espacamento, Bordas, Sombra } from '@/constantes/tema';
+import { Image, StyleSheet, View } from 'react-native';
+import { cores, espaco, raios, tamanhos } from '@/constantes/tema';
+import { Icone } from './Icone';
+import { Pressionavel } from './Pressionavel';
+import { Texto } from './Texto';
+
+// Altura da area de foto do formulario.
+const ALTURA_FOTO = 200;
 
 interface FotoPontoInputProps {
   fotoUri: string | null;
@@ -15,108 +14,90 @@ interface FotoPontoInputProps {
 
 export function FotoPontoInput({ fotoUri, onPress }: FotoPontoInputProps) {
   return (
-    <TouchableOpacity
-      style={estilos.fotoArea}
+    <Pressionavel
+      style={estilos.area}
+      escala={0.98}
       onPress={onPress}
-      activeOpacity={0.85}
+      accessibilityRole="button"
+      accessibilityLabel={fotoUri ? 'Trocar foto do ponto' : 'Adicionar foto do ponto'}
     >
       {fotoUri ? (
         <>
-          <Image source={{ uri: fotoUri }} style={estilos.fotoImagem} />
-          <View style={estilos.fotoOverlay}>
-            <View style={estilos.fotoBadge}>
-              <MaterialCommunityIcons
-                name="camera-retake"
-                size={16}
-                color={Cores.branco}
-              />
-              <Text style={estilos.fotoBadgeTexto}>Trocar foto</Text>
-            </View>
+          <Image source={{ uri: fotoUri }} style={estilos.imagem} />
+          <View style={estilos.selo}>
+            <Icone
+              nome="camera-retake"
+              tamanho={tamanhos.iconeMenor}
+              cor={cores.sobreEscuro}
+            />
+            <Texto variante="detalhe" cor={cores.sobreEscuro}>
+              Trocar foto
+            </Texto>
           </View>
         </>
       ) : (
-        <View style={estilos.fotoPlaceholder}>
-          <View style={estilos.fotoIconRow}>
-            <MaterialCommunityIcons
-              name="camera"
-              size={28}
-              color={Cores.primaria}
-            />
-            <Text style={estilos.fotoSeparador}>ou</Text>
-            <MaterialCommunityIcons
-              name="image-multiple"
-              size={28}
-              color={Cores.primaria}
+        <View style={estilos.vazio}>
+          <View style={estilos.icones}>
+            <Icone nome="camera" tamanho={tamanhos.iconeMaior} cor={cores.primaria} />
+            <Texto variante="detalhe" cor={cores.tintaSuave}>
+              ou
+            </Texto>
+            <Icone
+              nome="image-multiple"
+              tamanho={tamanhos.iconeMaior}
+              cor={cores.primaria}
             />
           </View>
-          <Text style={estilos.fotoTitulo}>Adicionar foto do ponto</Text>
-          <Text style={estilos.fotoSub}>
+          <Texto variante="cartao">Adicionar foto do ponto</Texto>
+          <Texto variante="detalhe" cor={cores.tintaSuave} style={estilos.centro}>
             Toque para tirar uma foto ou escolher da galeria
-          </Text>
+          </Texto>
         </View>
       )}
-    </TouchableOpacity>
+    </Pressionavel>
   );
 }
 
 const estilos = StyleSheet.create({
-  fotoArea: {
-    borderRadius: Bordas.raioGrande,
+  area: {
+    height: ALTURA_FOTO,
+    borderRadius: raios.lg,
     overflow: 'hidden',
-    marginBottom: Espacamento.lg,
-    ...Sombra.suave,
+    backgroundColor: cores.nevoa,
   },
-  fotoImagem: { width: '100%', height: 200 },
-  fotoOverlay: {
+  imagem: {
+    width: '100%',
+    height: '100%',
+  },
+  selo: {
     position: 'absolute',
-    bottom: Espacamento.sm,
-    right: Espacamento.sm,
-  },
-  fotoBadge: {
+    right: espaco.sm,
+    bottom: espaco.sm,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    paddingHorizontal: Espacamento.sm,
-    paddingVertical: 4,
-    borderRadius: Bordas.raioTotal,
+    gap: espaco.xxs,
+    paddingHorizontal: espaco.sm,
+    paddingVertical: espaco.xs,
+    borderRadius: raios.total,
+    backgroundColor: cores.veu,
   },
-  fotoBadgeTexto: {
-    color: Cores.branco,
-    fontSize: Fontes.pequena,
-    fontWeight: Fontes.negrito,
-  },
-  fotoPlaceholder: {
-    height: 180,
-    backgroundColor: Cores.branco,
+  vazio: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: Cores.cinzaBorda,
+    gap: espaco.xs,
+    padding: espaco.md,
+    borderRadius: raios.lg,
+    borderWidth: tamanhos.borda,
+    borderColor: cores.folha,
     borderStyle: 'dashed',
-    borderRadius: Bordas.raioGrande,
-    gap: 6,
-    padding: Espacamento.md,
   },
-  fotoIconRow: {
+  icones: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Espacamento.sm,
+    gap: espaco.sm,
   },
-  fotoSeparador: {
-    fontSize: Fontes.pequena,
-    color: Cores.cinzaMedio,
-    fontWeight: Fontes.medio_peso,
-  },
-  fotoTitulo: {
-    fontSize: Fontes.normal,
-    color: Cores.preto,
-    fontWeight: Fontes.muitoNegrito,
-    marginTop: 4,
-  },
-  fotoSub: {
-    fontSize: Fontes.pequena,
-    color: Cores.cinzaMedio,
+  centro: {
     textAlign: 'center',
   },
 });

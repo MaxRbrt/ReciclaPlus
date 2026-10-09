@@ -11,161 +11,97 @@
 // Blocos sem dados (sem pontos, sem cidade identificada) nao aparecem.
 // ============================================================
 
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  RefreshControl,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown, useReducedMotion } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useAutenticacao } from '@/hooks/useAutenticacao';
-import { usePontos } from '@/hooks/usePontos';
-import { CATEGORIAS } from '@/constantes/categorias';
-import {
-  Cores,
-  Fontes,
-  Espacamento,
-  Bordas,
-  Sombra,
-  Gradientes,
-} from '@/constantes/tema';
 import { useState, useMemo, useCallback } from 'react';
-import { Ponto } from '@/tipos/ponto';
-import { listarFavoritos } from '@/servicos/favoritos';
-import { MiniaturaPonto } from '@/componentes/MiniaturaPonto';
+import { Botao } from '@/componentes/Botao';
+import { BotaoIcone } from '@/componentes/BotaoIcone';
+import { CartaoPonto } from '@/componentes/CartaoPonto';
+import { EstadoTela } from '@/componentes/EstadoTela';
+import { FiltroCategorias } from '@/componentes/FiltroCategorias';
+import { FundoOrganico } from '@/componentes/FundoOrganico';
+import { Icone, NomeIcone } from '@/componentes/Icone';
+import { Pressionavel } from '@/componentes/Pressionavel';
+import { Secao } from '@/componentes/Secao';
+import { Texto } from '@/componentes/Texto';
+import { CATEGORIAS } from '@/constantes/categorias';
+import { FORMAS_DESTAQUE } from '@/constantes/formas';
+import {
+  comAlfa,
+  cores,
+  espaco,
+  movimento,
+  raios,
+  sombras,
+  tamanhos,
+} from '@/constantes/tema';
+import { useAutenticacao } from '@/hooks/useAutenticacao';
 import { useLocalizacaoUsuario } from '@/hooks/useLocalizacaoUsuario';
+import { usePontos } from '@/hooks/usePontos';
+import { listarFavoritos } from '@/servicos/favoritos';
 import {
   distanciaKm,
   formatarDistancia,
   normalizarTexto,
 } from '@/servicos/localizacao';
+import { Ponto } from '@/tipos/ponto';
+
+// Par fundo/texto dos blocos coloridos: tres tons do mesmo verde.
+type Tom = { fundo: string; texto: string };
+const TOM_ESCURO: Tom = { fundo: cores.primaria, texto: cores.sobreEscuro };
+const TOM_LIMA: Tom = { fundo: cores.lima, texto: cores.tinta };
+const TOM_CLARO: Tom = { fundo: cores.nevoa, texto: cores.tinta };
 
 // ============================================================
-// SUBCOMPONENTES
+// SUBCOMPONENTES (so desta tela)
 // ============================================================
 
-// ---------- StatItem ----------
-function StatItem({
-  icone,
+function Numero({
   valor,
-  label,
-  cor,
+  legenda,
+  tom,
 }: {
-  icone: string;
   valor: string | number;
-  label: string;
-  cor: string;
+  legenda: string;
+  tom: Tom;
 }) {
   return (
-    <View style={estilos.statItem}>
-      <View style={[estilos.statIconeWrap, { backgroundColor: cor + '1A' }]}>
-        <MaterialCommunityIcons name={icone as any} size={20} color={cor} />
-      </View>
-      <Text style={estilos.statValor}>{valor}</Text>
-      <Text style={estilos.statLabel}>{label}</Text>
+    <View style={[estilos.numero, { backgroundColor: tom.fundo }]}>
+      <Texto variante="numero" cor={tom.texto}>
+        {valor}
+      </Texto>
+      <Texto variante="detalhe" cor={tom.texto} style={estilos.centro}>
+        {legenda}
+      </Texto>
     </View>
   );
 }
 
-// ---------- CardAcaoRapida ----------
-function CardAcaoRapida({
+function Atalho({
   icone,
-  label,
-  cor,
-  aoTocar,
+  rotulo,
+  tom,
+  onPress,
 }: {
-  icone: string;
-  label: string;
-  cor: string;
-  aoTocar: () => void;
+  icone: NomeIcone;
+  rotulo: string;
+  tom: Tom;
+  onPress: () => void;
 }) {
   return (
-    <TouchableOpacity
-      style={estilos.cardAcao}
-      onPress={aoTocar}
-      activeOpacity={0.85}
+    <Pressionavel
+      style={[estilos.atalho, { backgroundColor: tom.fundo }]}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={rotulo}
     >
-      <View style={[estilos.cardAcaoIcone, { backgroundColor: cor + '1A' }]}>
-        <MaterialCommunityIcons name={icone as any} size={26} color={cor} />
-      </View>
-      <Text style={estilos.cardAcaoLabel}>{label}</Text>
-    </TouchableOpacity>
-  );
-}
-
-// ---------- ChipCategoria ----------
-function ChipCategoria({
-  nome,
-  cor,
-  ativo,
-  aoTocar,
-}: {
-  nome: string;
-  cor: string;
-  ativo: boolean;
-  aoTocar: () => void;
-}) {
-  return (
-    <TouchableOpacity
-      style={[
-        estilos.chip,
-        ativo && { backgroundColor: cor, borderColor: cor },
-      ]}
-      onPress={aoTocar}
-      activeOpacity={0.85}
-    >
-      <Text style={[estilos.chipTexto, ativo && { color: Cores.branco }]}>
-        {nome}
-      </Text>
-    </TouchableOpacity>
-  );
-}
-
-// ---------- CardPonto ----------
-// "distancia" ja vem formatada ("1,2 km") quando a posicao do usuario e conhecida.
-function CardPonto({ ponto, distancia }: { ponto: Ponto; distancia?: string }) {
-  return (
-    <TouchableOpacity
-      style={estilos.cardPonto}
-      onPress={() => router.push(`/ponto/${ponto.id}`)}
-      activeOpacity={0.85}
-    >
-      <View style={estilos.cardPontoIcone}>
-        <MiniaturaPonto fotoUrl={ponto.fotoUrl} tamanho={44} />
-      </View>
-      <View style={estilos.cardPontoInfo}>
-        <Text style={estilos.cardPontoNome} numberOfLines={1}>
-          {ponto.nome}
-        </Text>
-        <Text style={estilos.cardPontoBairro} numberOfLines={1}>
-          {[ponto.bairro, distancia ? `a ${distancia}` : null]
-            .filter(Boolean)
-            .join(' · ')}
-        </Text>
-        {ponto.horarioFuncionamento ? (
-          <View style={estilos.cardPontoHorarioLinha}>
-            <MaterialCommunityIcons
-              name="clock-outline"
-              size={11}
-              color={Cores.secundaria}
-            />
-            <Text style={estilos.cardPontoHorario} numberOfLines={1}>
-              {ponto.horarioFuncionamento}
-            </Text>
-          </View>
-        ) : null}
-      </View>
-      <MaterialCommunityIcons
-        name="chevron-right"
-        size={20}
-        color={Cores.cinzaMedio}
-      />
-    </TouchableOpacity>
+      <Icone nome={icone} tamanho={tamanhos.iconeMaior} cor={tom.texto} />
+      <Texto variante="corpoForte" cor={tom.texto}>
+        {rotulo}
+      </Texto>
+    </Pressionavel>
   );
 }
 
@@ -175,6 +111,7 @@ function CardPonto({ ponto, distancia }: { ponto: Ponto; distancia?: string }) {
 
 export default function TelaHome() {
   const { usuario } = useAutenticacao();
+  const margens = useSafeAreaInsets();
   const [categoriaSelecionada, setCategoriaSelecionada] = useState<
     number | undefined
   >(undefined);
@@ -284,104 +221,78 @@ export default function TelaHome() {
   // Total de pontos disponiveis no sistema (count direto da lista)
   const qtdTotalPontos = todosPontos.length;
 
+  // Cada bloco entra subindo, um pouco depois do anterior. Com movimento
+  // reduzido no aparelho, os blocos ja aparecem no lugar.
+  const movimentoReduzido = useReducedMotion();
+  function entrada(ordem: number) {
+    if (movimentoReduzido) return undefined;
+    return FadeInDown.delay(ordem * movimento.escalonar)
+      .springify()
+      .damping(movimento.molaEntrada.damping)
+      .stiffness(movimento.molaEntrada.stiffness);
+  }
+
   return (
     <ScrollView
       style={estilos.raiz}
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: Espacamento.xxl }}
+      contentContainerStyle={estilos.conteudo}
       refreshControl={
         <RefreshControl
           refreshing={atualizando}
           onRefresh={aoPuxarParaAtualizar}
-          colors={[Cores.primaria]}
-          tintColor={Cores.branco}
+          colors={[cores.primaria]}
+          tintColor={cores.sobreEscuro}
         />
       }
     >
       {/* ============================================ */}
-      {/* HERO COM GRADIENTE                            */}
+      {/* DESTAQUE COM FORMAS ORGANICAS                 */}
       {/* ============================================ */}
-      <LinearGradient
-        colors={Gradientes.verde}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={estilos.hero}
-      >
-        <View style={estilos.heroTopo}>
-          <View style={{ flex: 1 }}>
-            <Text style={estilos.heroOla}>Olá, {primeiroNome}</Text>
-            <Text style={estilos.heroNome}>Bem-vindo de volta 👋</Text>
-          </View>
+      <View style={[estilos.destaque, { paddingTop: margens.top + espaco.lg }]}>
+        <FundoOrganico formas={FORMAS_DESTAQUE} animado />
 
+        <View style={estilos.destaqueTopo}>
+          <Texto variante="corpoForte" cor={cores.sobreEscuroSuave}>
+            Olá, {primeiroNome}
+          </Texto>
           {/* Minha conta: editar nome, trocar senha, sair e excluir conta. */}
-          <TouchableOpacity
+          <BotaoIcone
+            icone="account-cog"
+            rotulo="Minha conta"
+            variante="translucido"
             onPress={() => router.push('/perfil')}
-            style={estilos.botaoSair}
-            activeOpacity={0.85}
-            accessibilityLabel="Minha conta"
-          >
-            <MaterialCommunityIcons
-              name="account-cog"
-              size={20}
-              color={Cores.branco}
-            />
-          </TouchableOpacity>
-        </View>
-
-        <View style={estilos.heroFraseLinha}>
-          <View style={{ flex: 1 }}>
-            <Text style={estilos.heroFrase}>
-              Pequenos atos.{'\n'}Grandes mudanças.
-            </Text>
-            <Text style={estilos.heroSubFrase}>
-              Encontre pontos de coleta perto de você.
-            </Text>
-          </View>
-          <MaterialCommunityIcons
-            name="recycle"
-            size={84}
-            color={Cores.branco}
-            style={estilos.heroIconeDecor}
           />
         </View>
 
-        <View style={{ height: 60 }} />
-      </LinearGradient>
-
-      {/* ============================================ */}
-      {/* STATS CARD (DADOS REAIS)                      */}
-      {/* ============================================ */}
-      <View style={estilos.statsCard}>
-        <Text style={estilos.statsTitulo}>Visão geral</Text>
-
-        <View style={estilos.statsLinha}>
-          {/* Pontos disponiveis no sistema */}
-          <StatItem
-            icone="map-marker-multiple"
-            valor={carregando ? '—' : qtdTotalPontos}
-            label="pontos disponíveis"
-            cor={Cores.primaria}
-          />
-          <View style={estilos.statsDivisor} />
-
-          {/* Favoritos do usuario */}
-          <StatItem
-            icone="heart"
-            valor={qtdFavoritos === null ? '—' : qtdFavoritos}
-            label="favoritos"
-            cor={Cores.secundaria}
-          />
-          <View style={estilos.statsDivisor} />
-
-          {/* Pontos cadastrados pelo proprio usuario */}
-          <StatItem
-            icone="plus-circle"
-            valor={carregando ? '—' : qtdMeusPontos}
-            label="meus pontos"
-            cor={Cores.acento}
-          />
-        </View>
+        <Texto variante="display" cor={cores.sobreEscuro} style={estilos.frase}>
+          Pequenos atos.{'\n'}Grandes mudanças.
+        </Texto>
+        <Texto cor={cores.sobreEscuroSuave} style={estilos.subFrase}>
+          Encontre pontos de coleta perto de você.
+        </Texto>
       </View>
+
+      {/* ============================================ */}
+      {/* VISAO GERAL (DADOS REAIS)                     */}
+      {/* ============================================ */}
+      <Animated.View entering={entrada(0)} style={estilos.visaoGeral}>
+        <Numero
+          valor={carregando ? '—' : qtdTotalPontos}
+          legenda="pontos disponíveis"
+          tom={TOM_ESCURO}
+        />
+        <Numero
+          valor={qtdFavoritos === null ? '—' : qtdFavoritos}
+          legenda="favoritos"
+          tom={TOM_LIMA}
+        />
+        <Numero
+          valor={carregando ? '—' : qtdMeusPontos}
+          legenda="meus pontos"
+          tom={TOM_CLARO}
+        />
+      </Animated.View>
 
       {/* ============================================ */}
       {/* PERTO DE VOCE                                 */}
@@ -389,88 +300,77 @@ export default function TelaHome() {
       {/* identificada pelo GPS.                        */}
       {/* ============================================ */}
       {cidade && !carregando && !erro ? (
-        <View style={estilos.secao}>
-          <View style={estilos.secaoCabecalho}>
-            <Text style={estilos.secaoTitulo}>Perto de você</Text>
-            <Text style={estilos.secaoSub}>{cidade}</Text>
-          </View>
-
-          {pontosDaCidade.length > 0 ? (
-            <>
-              <Text style={estilos.pertoResumo}>
-                {pontosDaCidade.length === 1
-                  ? `Já existe 1 ponto de coleta em ${cidade}.`
-                  : `Já existem ${pontosDaCidade.length} pontos de coleta em ${cidade}.`}
-              </Text>
-              {pontosDaCidade.slice(0, 3).map(ponto => (
-                <CardPonto
-                  key={ponto.id}
-                  ponto={ponto}
-                  distancia={distanciaAte(ponto)}
+        <Animated.View entering={entrada(1)}>
+          <Secao titulo="Perto de você" complemento={cidade}>
+            {pontosDaCidade.length > 0 ? (
+              <>
+                <Texto cor={cores.tintaSuave}>
+                  {pontosDaCidade.length === 1
+                    ? `Já existe 1 ponto de coleta em ${cidade}.`
+                    : `Já existem ${pontosDaCidade.length} pontos de coleta em ${cidade}.`}
+                </Texto>
+                {pontosDaCidade.slice(0, 3).map(ponto => (
+                  <CartaoPonto
+                    key={ponto.id}
+                    nome={ponto.nome}
+                    fotoUrl={ponto.fotoUrl}
+                    linhas={[ponto.bairro]}
+                    destaque={ponto.horarioFuncionamento}
+                    iconeDestaque="clock-outline"
+                    distancia={distanciaAte(ponto)}
+                    onPress={() => router.push(`/ponto/${ponto.id}`)}
+                  />
+                ))}
+                <Botao
+                  compacto
+                  variante="suave"
+                  rotulo={`Ver a comunidade de ${cidade}`}
+                  onPress={() =>
+                    router.push({ pathname: '/(abas)/comunidade', params: { cidade } })
+                  }
                 />
-              ))}
-              <TouchableOpacity
-                style={[estilos.tentarNovamente, estilos.pertoBotao]}
-                onPress={() =>
-                  router.push({ pathname: '/(abas)/comunidade', params: { cidade } })
-                }
-              >
-                <Text style={estilos.tentarNovamenteTexto}>
-                  Ver a comunidade de {cidade}
-                </Text>
-              </TouchableOpacity>
-            </>
-          ) : (
-            <View style={estilos.estadoVazio}>
-              <MaterialCommunityIcons
-                name="map-marker-plus-outline"
-                size={32}
-                color={Cores.cinzaMedio}
+              </>
+            ) : (
+              <EstadoTela
+                icone="map-marker-plus-outline"
+                mensagem={`Ainda não há pontos de coleta em ${cidade}. Seja a primeira pessoa a cadastrar um!`}
+                acao={{
+                  rotulo: 'Cadastrar ponto',
+                  onPress: () => router.push('/ponto/novo'),
+                }}
               />
-              <Text style={estilos.estadoVazioTexto}>
-                Ainda não há pontos de coleta em {cidade}. Seja a primeira
-                pessoa a cadastrar um!
-              </Text>
-              <TouchableOpacity
-                style={estilos.tentarNovamente}
-                onPress={() => router.push('/ponto/novo')}
-              >
-                <Text style={estilos.tentarNovamenteTexto}>Cadastrar ponto</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
+            )}
+          </Secao>
+        </Animated.View>
       ) : null}
 
       {/* ============================================ */}
       {/* ACOES RAPIDAS                                 */}
       {/* ============================================ */}
-      <View style={estilos.secao}>
-        <View style={estilos.secaoCabecalho}>
-          <Text style={estilos.secaoTitulo}>Ações rápidas</Text>
-        </View>
-
-        <View style={estilos.acoesGrid}>
-          <CardAcaoRapida
-            icone="map-search"
-            label="Ver Mapa"
-            cor={Cores.primaria}
-            aoTocar={() => router.push('/(abas)/mapa')}
-          />
-          <CardAcaoRapida
-            icone="format-list-bulleted"
-            label="Ver Pontos"
-            cor={Cores.secundaria}
-            aoTocar={() => router.push('/(abas)/lista')}
-          />
-          <CardAcaoRapida
-            icone="plus-circle"
-            label="Novo Ponto"
-            cor={Cores.acento}
-            aoTocar={() => router.push('/ponto/novo')}
-          />
-        </View>
-      </View>
+      <Animated.View entering={entrada(2)}>
+        <Secao titulo="Ações rápidas">
+          <View style={estilos.atalhos}>
+            <Atalho
+              icone="map-search"
+              rotulo="Ver Mapa"
+              tom={TOM_ESCURO}
+              onPress={() => router.push('/(abas)/mapa')}
+            />
+            <Atalho
+              icone="format-list-bulleted"
+              rotulo="Ver Pontos"
+              tom={TOM_CLARO}
+              onPress={() => router.push('/(abas)/lista')}
+            />
+            <Atalho
+              icone="plus-circle"
+              rotulo="Novo Ponto"
+              tom={TOM_LIMA}
+              onPress={() => router.push('/ponto/novo')}
+            />
+          </View>
+        </Secao>
+      </Animated.View>
 
       {/* ============================================ */}
       {/* CATEGORIA EM DESTAQUE (computada de dados)    */}
@@ -478,167 +378,102 @@ export default function TelaHome() {
       {/* frequente identificada nos pontos.            */}
       {/* ============================================ */}
       {categoriaDestaque ? (
-        <View style={estilos.secao}>
-          <View style={estilos.secaoCabecalho}>
-            <Text style={estilos.secaoTitulo}>Categoria mais aceita</Text>
-            <Text style={estilos.secaoSub}>Pelos pontos do app</Text>
-          </View>
-
-          <TouchableOpacity
-            activeOpacity={0.9}
-            style={[
-              estilos.cardDestaque,
-              { backgroundColor: categoriaDestaque.cor + '14' },
-            ]}
-            onPress={() => setCategoriaSelecionada(categoriaDestaque.id)}
-          >
-            <View
+        <Animated.View entering={entrada(3)}>
+          <Secao titulo="Categoria mais aceita" complemento="Pelos pontos do app">
+            <Pressionavel
+              escala={0.98}
               style={[
-                estilos.cardDestaqueIcone,
-                { backgroundColor: categoriaDestaque.cor },
+                estilos.categoria,
+                { backgroundColor: comAlfa(categoriaDestaque.cor, 0.12) },
               ]}
+              onPress={() => setCategoriaSelecionada(categoriaDestaque.id)}
             >
-              <MaterialCommunityIcons
-                name={categoriaDestaque.icone as any}
-                size={36}
-                color={Cores.branco}
-              />
-            </View>
+              <View
+                style={[
+                  estilos.categoriaIcone,
+                  { backgroundColor: categoriaDestaque.cor },
+                ]}
+              >
+                <Icone
+                  nome={categoriaDestaque.icone}
+                  tamanho={tamanhos.iconeMaior + espaco.xs}
+                  cor={cores.sobreEscuro}
+                />
+              </View>
 
-            <View style={estilos.cardDestaqueInfo}>
-              <Text style={estilos.cardDestaqueLabel}>EM DESTAQUE</Text>
-              <Text style={estilos.cardDestaqueNome}>
-                {categoriaDestaque.nome}
-              </Text>
-              <Text style={estilos.cardDestaqueDesc}>
-                Categoria com mais pontos de coleta cadastrados na sua região.
-              </Text>
-            </View>
+              <View style={estilos.categoriaInfo}>
+                <Texto variante="rotulo" cor={categoriaDestaque.cor}>
+                  Em destaque
+                </Texto>
+                <Texto variante="titulo">{categoriaDestaque.nome}</Texto>
+                <Texto variante="detalhe" cor={cores.tintaSuave}>
+                  Categoria com mais pontos de coleta cadastrados na sua região.
+                </Texto>
+              </View>
 
-            <MaterialCommunityIcons
-              name="arrow-right"
-              size={22}
-              color={categoriaDestaque.cor}
-            />
-          </TouchableOpacity>
-        </View>
+              <Icone nome="arrow-right" cor={categoriaDestaque.cor} />
+            </Pressionavel>
+          </Secao>
+        </Animated.View>
       ) : null}
 
       {/* ============================================ */}
       {/* FILTRO POR CATEGORIA                          */}
       {/* ============================================ */}
-      <View style={estilos.secao}>
-        <Text style={estilos.secaoTitulo}>Filtrar por categoria</Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={estilos.chipsLinha}
-        >
-          <TouchableOpacity
-            style={[
-              estilos.chip,
-              !categoriaSelecionada && {
-                backgroundColor: Cores.primaria,
-                borderColor: Cores.primaria,
-              },
-            ]}
-            onPress={() => setCategoriaSelecionada(undefined)}
-            activeOpacity={0.85}
-          >
-            <Text
-              style={[
-                estilos.chipTexto,
-                !categoriaSelecionada && { color: Cores.branco },
-              ]}
-            >
-              Todos
-            </Text>
-          </TouchableOpacity>
-
-          {CATEGORIAS.map(cat => (
-            <ChipCategoria
-              key={cat.id}
-              nome={cat.nome}
-              cor={cat.cor}
-              ativo={categoriaSelecionada === cat.id}
-              aoTocar={() =>
-                setCategoriaSelecionada(
-                  categoriaSelecionada === cat.id ? undefined : cat.id
-                )
-              }
-            />
-          ))}
-        </ScrollView>
-      </View>
+      <Secao titulo="Filtrar por categoria" sangrar>
+        <FiltroCategorias
+          selecionada={categoriaSelecionada}
+          aoSelecionar={setCategoriaSelecionada}
+        />
+      </Secao>
 
       {/* ============================================ */}
       {/* PONTOS DE COLETA                              */}
       {/* ============================================ */}
-      <View style={estilos.secao}>
-        <View style={estilos.secaoCabecalho}>
-          <Text style={estilos.secaoTitulo}>Pontos de coleta</Text>
-          <TouchableOpacity onPress={() => router.push('/(abas)/lista')}>
-            <Text style={estilos.verTodos}>Ver todos</Text>
-          </TouchableOpacity>
-        </View>
+      <Secao
+        titulo="Pontos de coleta"
+        acao={{ rotulo: 'Ver todos', onPress: () => router.push('/(abas)/lista') }}
+      >
+        {carregando ? <EstadoTela carregando /> : null}
 
-        {carregando && (
-          <ActivityIndicator
-            color={Cores.primaria}
-            style={{ marginTop: Espacamento.lg }}
+        {erro && !carregando ? (
+          <EstadoTela
+            icone="wifi-off"
+            mensagem={erro}
+            acao={{ rotulo: 'Tentar novamente', onPress: recarregar }}
           />
-        )}
+        ) : null}
 
-        {erro && !carregando && (
-          <View style={estilos.estadoVazio}>
-            <MaterialCommunityIcons
-              name="wifi-off"
-              size={32}
-              color={Cores.cinzaMedio}
-            />
-            <Text style={estilos.estadoVazioTexto}>{erro}</Text>
-            <TouchableOpacity
-              style={estilos.tentarNovamente}
-              onPress={recarregar}
-            >
-              <Text style={estilos.tentarNovamenteTexto}>Tentar novamente</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {!carregando && !erro && pontos.length === 0 && (
-          <View style={estilos.estadoVazio}>
-            <MaterialCommunityIcons
-              name="map-marker-off"
-              size={32}
-              color={Cores.cinzaMedio}
-            />
-            <Text style={estilos.estadoVazioTexto}>
-              {categoriaSelecionada === undefined
+        {!carregando && !erro && pontos.length === 0 ? (
+          <EstadoTela
+            icone="map-marker-off"
+            mensagem={
+              categoriaSelecionada === undefined
                 ? 'Nenhum ponto cadastrado ainda.'
-                : 'Nenhum ponto aceita esta categoria ainda.'}
-            </Text>
-            <TouchableOpacity
-              style={estilos.tentarNovamente}
-              onPress={() => router.push('/ponto/novo')}
-            >
-              <Text style={estilos.tentarNovamenteTexto}>
-                Cadastrar primeiro ponto
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
+                : 'Nenhum ponto aceita esta categoria ainda.'
+            }
+            acao={{
+              rotulo: 'Cadastrar primeiro ponto',
+              onPress: () => router.push('/ponto/novo'),
+            }}
+          />
+        ) : null}
 
-        {!carregando &&
-          !erro &&
-          pontos.slice(0, 5).map(ponto => (
-            <CardPonto
-              key={ponto.id}
-              ponto={ponto}
-              distancia={distanciaAte(ponto)}
-            />
-          ))}
-      </View>
+        {!carregando && !erro
+          ? pontos.slice(0, 5).map(ponto => (
+              <CartaoPonto
+                key={ponto.id}
+                nome={ponto.nome}
+                fotoUrl={ponto.fotoUrl}
+                linhas={[ponto.bairro]}
+                destaque={ponto.horarioFuncionamento}
+                iconeDestaque="clock-outline"
+                distancia={distanciaAte(ponto)}
+                onPress={() => router.push(`/ponto/${ponto.id}`)}
+              />
+            ))
+          : null}
+      </Secao>
     </ScrollView>
   );
 }
@@ -650,298 +485,93 @@ export default function TelaHome() {
 const estilos = StyleSheet.create({
   raiz: {
     flex: 1,
-    backgroundColor: Cores.cinzaClaro,
+    backgroundColor: cores.fundo,
   },
-
-  // ------------------ HERO ------------------
-  hero: {
-    paddingTop: 56,
-    paddingHorizontal: Espacamento.lg,
-    paddingBottom: Espacamento.lg,
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
+  conteudo: {
+    gap: espaco.xl,
+    paddingBottom: espaco.xxxl,
   },
-  heroTopo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  heroOla: {
-    fontSize: Fontes.normal,
-    color: 'rgba(255,255,255,0.85)',
-    fontWeight: Fontes.medio_peso,
-  },
-  heroNome: {
-    fontSize: Fontes.titulo,
-    color: Cores.branco,
-    fontWeight: Fontes.muitoNegrito,
-    marginTop: 2,
-  },
-  botaoSair: {
-    width: 40,
-    height: 40,
-    borderRadius: Bordas.raioTotal,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  heroFraseLinha: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: Espacamento.lg,
-  },
-  heroFrase: {
-    fontSize: Fontes.tituloGrande,
-    color: Cores.branco,
-    fontWeight: Fontes.muitoNegrito,
-    lineHeight: 34,
-  },
-  heroSubFrase: {
-    fontSize: Fontes.normal,
-    color: 'rgba(255,255,255,0.85)',
-    marginTop: Espacamento.xs,
-    lineHeight: 20,
-  },
-  heroIconeDecor: {
-    opacity: 0.25,
-  },
-
-  // ------------------ STATS CARD ------------------
-  statsCard: {
-    backgroundColor: Cores.branco,
-    marginHorizontal: Espacamento.lg,
-    marginTop: -50,
-    borderRadius: Bordas.raioGrande,
-    padding: Espacamento.md,
-    ...Sombra.padrao,
-  },
-  statsTitulo: {
-    fontSize: Fontes.normal,
-    color: Cores.cinzaMedio,
-    fontWeight: Fontes.medio_peso,
-    marginBottom: Espacamento.sm,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  statsLinha: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statIconeWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Espacamento.xs,
-  },
-  statValor: {
-    fontSize: Fontes.titulo,
-    fontWeight: Fontes.muitoNegrito,
-    color: Cores.preto,
-  },
-  statLabel: {
-    fontSize: Fontes.pequena,
-    color: Cores.cinzaMedio,
-    marginTop: 2,
+  centro: {
     textAlign: 'center',
   },
-  statsDivisor: {
-    width: 1,
-    height: 36,
-    backgroundColor: Cores.cinzaBorda,
-  },
 
-  // ------------------ SECAO GENERICA ------------------
-  secao: {
-    marginTop: Espacamento.lg,
-    paddingHorizontal: Espacamento.lg,
+  // ------------------ DESTAQUE ------------------
+  destaque: {
+    backgroundColor: cores.floresta,
+    paddingHorizontal: espaco.xl,
+    // Espaco para a visao geral subir por cima do destaque.
+    paddingBottom: espaco.xxxl + espaco.xl,
+    borderBottomLeftRadius: raios.lg,
+    borderBottomRightRadius: raios.lg,
+    overflow: 'hidden',
   },
-  secaoCabecalho: {
+  destaqueTopo: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    marginBottom: Espacamento.sm,
   },
-  secaoTitulo: {
-    fontSize: Fontes.media,
-    fontWeight: Fontes.negrito,
-    color: Cores.preto,
+  frase: {
+    marginTop: espaco.xl,
   },
-  secaoSub: {
-    fontSize: Fontes.pequena,
-    color: Cores.cinzaMedio,
-  },
-  verTodos: {
-    fontSize: Fontes.normal,
-    color: Cores.primaria,
-    fontWeight: Fontes.medio_peso,
+  subFrase: {
+    marginTop: espaco.xs,
+    // Deixa as folhas do canto direito respirarem.
+    maxWidth: '72%',
   },
 
-  // ------------------ PERTO DE VOCE ------------------
-  pertoResumo: {
-    fontSize: Fontes.normal,
-    color: Cores.cinzaEscuro,
-    marginBottom: Espacamento.sm,
+  // ------------------ VISAO GERAL ------------------
+  visaoGeral: {
+    flexDirection: 'row',
+    gap: espaco.xs,
+    marginHorizontal: espaco.xl,
+    // Sobe por cima do destaque, descontando o gap da pagina.
+    marginTop: -(espaco.xxxl + espaco.xl + espaco.md),
+    padding: espaco.xs,
+    borderRadius: raios.lg,
+    backgroundColor: cores.superficie,
+    ...sombras.alta,
   },
-  pertoBotao: {
-    alignSelf: 'center',
-    marginTop: Espacamento.xs,
+  numero: {
+    flex: 1,
+    alignItems: 'center',
+    gap: espaco.xxs / 2,
+    paddingVertical: espaco.sm,
+    paddingHorizontal: espaco.xxs,
+    borderRadius: raios.md,
   },
 
   // ------------------ ACOES RAPIDAS ------------------
-  acoesGrid: {
+  atalhos: {
     flexDirection: 'row',
-    gap: Espacamento.sm,
+    gap: espaco.xs,
   },
-  cardAcao: {
+  atalho: {
     flex: 1,
-    backgroundColor: Cores.branco,
-    borderRadius: Bordas.raio,
-    paddingVertical: Espacamento.md,
-    alignItems: 'center',
-    ...Sombra.suave,
+    alignItems: 'flex-start',
+    gap: espaco.sm,
+    padding: espaco.md,
+    borderRadius: raios.md,
+    borderBottomLeftRadius: raios.sm / 2,
   },
-  cardAcaoIcone: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+
+  // ------------------ CATEGORIA EM DESTAQUE ------------------
+  categoria: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: espaco.md,
+    padding: espaco.md,
+    borderRadius: raios.lg,
+  },
+  categoriaIcone: {
+    width: tamanhos.toque + espaco.lg,
+    height: tamanhos.toque + espaco.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Espacamento.xs,
+    borderRadius: raios.md,
+    borderBottomLeftRadius: raios.sm / 2,
   },
-  cardAcaoLabel: {
-    fontSize: Fontes.pequena,
-    fontWeight: Fontes.medio_peso,
-    color: Cores.cinzaEscuro,
-    textAlign: 'center',
-  },
-
-  // ------------------ CARD DESTAQUE ------------------
-  cardDestaque: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: Espacamento.md,
-    borderRadius: Bordas.raioGrande,
-    gap: Espacamento.md,
-  },
-  cardDestaqueIcone: {
-    width: 60,
-    height: 60,
-    borderRadius: Bordas.raio,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Sombra.suave,
-  },
-  cardDestaqueInfo: {
+  categoriaInfo: {
     flex: 1,
-  },
-  cardDestaqueLabel: {
-    fontSize: 10,
-    fontWeight: Fontes.muitoNegrito,
-    color: Cores.cinzaMedio,
-    letterSpacing: 1,
-  },
-  cardDestaqueNome: {
-    fontSize: Fontes.grande,
-    fontWeight: Fontes.muitoNegrito,
-    color: Cores.preto,
-    marginTop: 2,
-  },
-  cardDestaqueDesc: {
-    fontSize: Fontes.pequena,
-    color: Cores.cinzaEscuro,
-    marginTop: 2,
-    lineHeight: 16,
-  },
-
-  // ------------------ CHIPS ------------------
-  chipsLinha: {
-    gap: Espacamento.sm,
-    paddingRight: Espacamento.lg,
-    // Respiro em relacao ao titulo "Filtrar por categoria" logo acima.
-    paddingTop: Espacamento.sm,
-  },
-  chip: {
-    borderWidth: 1.5,
-    borderColor: Cores.cinzaBorda,
-    borderRadius: Bordas.raioTotal,
-    paddingHorizontal: Espacamento.md,
-    paddingVertical: 6,
-    backgroundColor: Cores.branco,
-  },
-  chipTexto: {
-    fontSize: Fontes.pequena,
-    fontWeight: Fontes.medio_peso,
-    color: Cores.cinzaEscuro,
-  },
-
-  // ------------------ CARD PONTO ------------------
-  cardPonto: {
-    backgroundColor: Cores.branco,
-    borderRadius: Bordas.raio,
-    padding: Espacamento.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Espacamento.sm,
-    ...Sombra.suave,
-  },
-  cardPontoIcone: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Cores.primariaFundo,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: Espacamento.sm,
-  },
-  cardPontoInfo: {
-    flex: 1,
-  },
-  cardPontoNome: {
-    fontSize: Fontes.normal,
-    fontWeight: Fontes.negrito,
-    color: Cores.preto,
-  },
-  cardPontoBairro: {
-    fontSize: Fontes.pequena,
-    color: Cores.cinzaMedio,
-    marginTop: 2,
-  },
-  cardPontoHorarioLinha: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    marginTop: 2,
-  },
-  cardPontoHorario: {
-    fontSize: Fontes.pequena,
-    color: Cores.secundaria,
-  },
-
-  // ------------------ ESTADO VAZIO / ERRO ------------------
-  estadoVazio: {
-    alignItems: 'center',
-    paddingVertical: Espacamento.xl,
-    gap: Espacamento.sm,
-  },
-  estadoVazioTexto: {
-    fontSize: Fontes.normal,
-    color: Cores.cinzaMedio,
-    textAlign: 'center',
-  },
-  tentarNovamente: {
-    paddingHorizontal: Espacamento.lg,
-    paddingVertical: Espacamento.sm,
-    backgroundColor: Cores.primariaFundo,
-    borderRadius: Bordas.raioTotal,
-  },
-  tentarNovamenteTexto: {
-    fontSize: Fontes.normal,
-    color: Cores.primaria,
-    fontWeight: Fontes.medio_peso,
+    gap: espaco.xxs / 2,
   },
 });

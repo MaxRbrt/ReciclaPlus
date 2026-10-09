@@ -1,7 +1,7 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { CATEGORIAS } from '@/constantes/categorias';
-import { Cores, Fontes, Espacamento, Bordas } from '@/constantes/tema';
+import { espaco } from '@/constantes/tema';
+import { Chip } from './Chip';
 
 interface SelecionadorCategoriasProps {
   selecionadas: number[];
@@ -13,62 +13,25 @@ export function SelecionadorCategorias({
   aoAlternar,
 }: SelecionadorCategoriasProps) {
   return (
-    <View style={estilos.categoriasGrid}>
-      {CATEGORIAS.map(cat => {
-        const selecionado = selecionadas.includes(cat.id);
-        return (
-          <TouchableOpacity
-            key={cat.id}
-            style={[
-              estilos.catChip,
-              selecionado && {
-                backgroundColor: cat.cor,
-                borderColor: cat.cor,
-              },
-            ]}
-            onPress={() => aoAlternar(cat.id)}
-            activeOpacity={0.8}
-          >
-            <MaterialCommunityIcons
-              name={cat.icone as any}
-              size={16}
-              color={selecionado ? Cores.branco : cat.cor}
-            />
-            <Text
-              style={[
-                estilos.catChipTexto,
-                selecionado && { color: Cores.branco },
-              ]}
-            >
-              {cat.nome}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
+    <View style={estilos.grade}>
+      {CATEGORIAS.map(categoria => (
+        <Chip
+          key={categoria.id}
+          rotulo={categoria.nome}
+          icone={categoria.icone}
+          cor={categoria.cor}
+          ativo={selecionadas.includes(categoria.id)}
+          onPress={() => aoAlternar(categoria.id)}
+        />
+      ))}
     </View>
   );
 }
 
 const estilos = StyleSheet.create({
-  categoriasGrid: {
+  grade: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Espacamento.sm,
-  },
-  catChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    borderWidth: 1.5,
-    borderColor: Cores.cinzaBorda,
-    borderRadius: Bordas.raioTotal,
-    paddingHorizontal: Espacamento.sm,
-    paddingVertical: 7,
-    backgroundColor: Cores.branco,
-  },
-  catChipTexto: {
-    fontSize: Fontes.pequena,
-    fontWeight: Fontes.medio_peso,
-    color: Cores.cinzaEscuro,
+    gap: espaco.xs,
   },
 });

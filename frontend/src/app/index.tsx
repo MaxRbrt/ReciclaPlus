@@ -16,15 +16,14 @@
 //   isso ocorre.
 // ============================================================
 
-import { View, ActivityIndicator, StyleSheet, Text } from 'react-native';
-import { Cores, Fontes, Espacamento } from '@/constantes/tema';
+import { StyleSheet, View } from 'react-native';
+import { EstadoTela } from '@/componentes/EstadoTela';
+import { cores } from '@/constantes/tema';
 
 export default function TelaInicial() {
   return (
     <View style={estilos.raiz}>
-      {/* Spinner verde + texto, combinando com a identidade do app */}
-      <ActivityIndicator size="large" color={Cores.primaria} />
-      <Text style={estilos.texto}>Carregando Recicla+...</Text>
+      <EstadoTela preencher carregando mensagem="Carregando Recicla+..." />
     </View>
   );
 }
@@ -32,14 +31,6 @@ export default function TelaInicial() {
 const estilos = StyleSheet.create({
   raiz: {
     flex: 1,
-    backgroundColor: Cores.cinzaClaro,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Espacamento.md,
-  },
-  texto: {
-    fontSize: Fontes.normal,
-    color: Cores.cinzaMedio,
-    fontWeight: Fontes.medio_peso,
+    backgroundColor: cores.fundo,
   },
 });

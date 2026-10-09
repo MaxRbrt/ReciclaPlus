@@ -2,17 +2,14 @@
 // Montado uma unica vez no layout raiz; no celular nao renderiza nada.
 
 import { useEffect, useState } from 'react';
-import {
-  AlertButton,
-  Modal,
-  Platform,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { AlertButton, Modal, Platform, StyleSheet, View } from 'react-native';
+import { cores, espaco, raios, sombras } from '@/constantes/tema';
 import { AlertaPendente, registrarHostAlerta } from '@/servicos/alerta';
-import { Bordas, Cores, Espacamento, Fontes, Sombra } from '@/constantes/tema';
+import { Botao } from './Botao';
+import { Texto } from './Texto';
+
+// Largura maxima do dialogo em telas largas.
+const LARGURA_MAXIMA = 360;
 
 export function HostAlerta() {
   // Fila: um alerta aberto dentro do onPress de outro aparece em seguida.
@@ -40,30 +37,27 @@ export function HostAlerta() {
     <Modal transparent animationType="fade" visible>
       <View style={estilos.fundo}>
         <View style={estilos.caixa} accessibilityRole="alert">
-          <Text style={estilos.titulo}>{alerta.titulo}</Text>
+          <Texto variante="subtitulo">{alerta.titulo}</Texto>
           {alerta.mensagem ? (
-            <Text style={estilos.mensagem}>{alerta.mensagem}</Text>
+            <Texto cor={cores.tintaSuave}>{alerta.mensagem}</Texto>
           ) : null}
 
           <View style={[estilos.botoes, empilhar && estilos.botoesEmpilhados]}>
             {alerta.botoes.map((botao, indice) => (
-              <TouchableOpacity
+              <Botao
                 key={`${indice}-${botao.text}`}
-                style={[estilos.botao, !empilhar && estilos.botaoLadoALado]}
+                compacto
+                variante={
+                  botao.style === 'destructive'
+                    ? 'perigoSuave'
+                    : botao.style === 'cancel'
+                      ? 'contorno'
+                      : 'suave'
+                }
+                rotulo={botao.text ?? 'OK'}
                 onPress={() => aoEscolher(botao)}
-                accessibilityRole="button"
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={[
-                    estilos.botaoTexto,
-                    botao.style === 'destructive' && estilos.botaoTextoDestrutivo,
-                    botao.style === 'cancel' && estilos.botaoTextoCancelar,
-                  ]}
-                >
-                  {botao.text ?? 'OK'}
-                </Text>
-              </TouchableOpacity>
+                style={empilhar ? estilos.botaoEmpilhado : estilos.botaoLadoALado}
+              />
             ))}
           </View>
         </View>
@@ -77,57 +71,31 @@ const estilos = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    padding: Espacamento.lg,
+    backgroundColor: cores.veu,
+    padding: espaco.xl,
   },
   caixa: {
     width: '100%',
-    maxWidth: 360,
-    backgroundColor: Cores.branco,
-    borderRadius: Bordas.raioGrande,
-    padding: Espacamento.lg,
-    ...Sombra.forte,
-  },
-  titulo: {
-    fontSize: Fontes.grande,
-    fontWeight: Fontes.negrito,
-    color: Cores.preto,
-  },
-  mensagem: {
-    fontSize: Fontes.normal,
-    color: Cores.cinzaEscuro,
-    lineHeight: 20,
-    marginTop: Espacamento.sm,
+    maxWidth: LARGURA_MAXIMA,
+    gap: espaco.xs,
+    padding: espaco.xl,
+    borderRadius: raios.lg,
+    backgroundColor: cores.superficie,
+    ...sombras.alta,
   },
   botoes: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    gap: Espacamento.sm,
-    marginTop: Espacamento.lg,
+    gap: espaco.xs,
+    marginTop: espaco.md,
   },
   botoesEmpilhados: {
     flexDirection: 'column',
-    alignItems: 'stretch',
-  },
-  botao: {
-    paddingVertical: Espacamento.sm + 2,
-    paddingHorizontal: Espacamento.md,
-    borderRadius: Bordas.raio,
-    backgroundColor: Cores.cinzaClaro,
-    alignItems: 'center',
   },
   botaoLadoALado: {
-    minWidth: 96,
+    flex: 1,
   },
-  botaoTexto: {
-    fontSize: Fontes.normal,
-    fontWeight: Fontes.negrito,
-    color: Cores.primaria,
-  },
-  botaoTextoDestrutivo: {
-    color: Cores.erro,
-  },
-  botaoTextoCancelar: {
-    color: Cores.cinzaEscuro,
+  botaoEmpilhado: {
+    alignSelf: 'stretch',
   },
 });

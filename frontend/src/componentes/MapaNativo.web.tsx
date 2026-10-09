@@ -16,7 +16,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
-import { Cores } from '@/constantes/tema';
+import { cores } from '@/constantes/tema';
 
 type Coordenada = {
   latitude: number;
@@ -176,8 +176,8 @@ function criarIcone(L: typeof Leaflet, cor: string): Leaflet.DivIcon {
     className: '',
     html:
       `<div style="width:26px;height:26px;border-radius:50% 50% 50% 0;` +
-      `background:${cor};border:2px solid #fff;transform:rotate(-45deg);` +
-      `box-shadow:0 1px 4px rgba(0,0,0,0.4)"></div>`,
+      `background:${cor};border:2px solid ${cores.superficie};transform:rotate(-45deg);` +
+      `box-shadow:0 1px 4px ${cores.veu}"></div>`,
     iconSize: [26, 26],
     iconAnchor: [13, 28],
     popupAnchor: [0, -26],
@@ -202,7 +202,7 @@ export const Marker = forwardRef<MarkerRef, MarkerWebProps>(
       if (!contexto) return;
 
       const marcador = contexto.L.marker([latitude, longitude], {
-        icon: criarIcone(contexto.L, pinColor ?? Cores.primaria),
+        icon: criarIcone(contexto.L, pinColor ?? cores.primaria),
         zIndexOffset: zIndex ?? 0,
       }).addTo(contexto.mapa);
 
@@ -280,6 +280,6 @@ const estilos = StyleSheet.create({
   raiz: {
     flex: 1,
     overflow: 'hidden',
-    backgroundColor: Cores.cinzaClaro,
+    backgroundColor: cores.fundo,
   },
 });

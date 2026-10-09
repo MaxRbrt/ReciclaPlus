@@ -9,6 +9,7 @@
 //        - Sem sessao salva  -> /(auth)/entrar (tela de login)
 //        - Com sessao salva  -> /(abas)        (tab bar principal)
 //   3. Declarar todos os grupos de rotas do app.
+//   4. Carregar as fontes do app antes de desenhar qualquer tela.
 //
 // Por que o gate fica AQUI e nao em cada tela:
 //   - Evita "flash" da tela errada (ex: ver as abas por meio segundo
@@ -19,7 +20,14 @@
 // ============================================================
 
 import { useEffect } from 'react';
+import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
+import { Fredoka_600SemiBold } from '@expo-google-fonts/fredoka/600SemiBold';
+import { Fredoka_700Bold } from '@expo-google-fonts/fredoka/700Bold';
+import { Nunito_400Regular } from '@expo-google-fonts/nunito/400Regular';
+import { Nunito_600SemiBold } from '@expo-google-fonts/nunito/600SemiBold';
+import { Nunito_700Bold } from '@expo-google-fonts/nunito/700Bold';
+import { Nunito_800ExtraBold } from '@expo-google-fonts/nunito/800ExtraBold';
 import { AutenticacaoProvider } from '@/contextos/AutenticacaoContexto';
 import { useAutenticacao } from '@/hooks/useAutenticacao';
 import { HostAlerta } from '@/componentes/HostAlerta';
@@ -58,6 +66,19 @@ function GuardaDeRotas({ children }: { children: React.ReactNode }) {
 // Layout raiz exportado pelo Expo Router
 // ------------------------------------------------------------
 export default function LayoutRaiz() {
+  // Os nomes sao os mesmos usados em constantes/tema (fontes).
+  const [fontesProntas, erroFontes] = useFonts({
+    Fredoka_600SemiBold,
+    Fredoka_700Bold,
+    Nunito_400Regular,
+    Nunito_600SemiBold,
+    Nunito_700Bold,
+    Nunito_800ExtraBold,
+  });
+
+  // Se as fontes falharem, o app abre mesmo assim, com a fonte do sistema.
+  if (!fontesProntas && !erroFontes) return null;
+
   return (
     // Provider de autenticacao envolve TUDO — necessario para que
     // useAutenticacao() funcione em qualquer tela e no proprio guard.

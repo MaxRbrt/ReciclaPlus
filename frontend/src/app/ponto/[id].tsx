@@ -1,21 +1,21 @@
 // Tela de detalhes do ponto.
 // Exibe foto, dados, favoritos e acoes de gerenciamento.
 
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  Image,
-  Linking,
-  Platform,
-  Share,
-} from 'react-native';
+import { Image, Linking, Platform, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
+import { Botao } from '@/componentes/Botao';
+import { BotaoIcone } from '@/componentes/BotaoIcone';
+import { EstadoTela } from '@/componentes/EstadoTela';
+import { EtiquetaCategoria } from '@/componentes/EtiquetaCategoria';
+import { FundoOrganico } from '@/componentes/FundoOrganico';
+import { Icone, NomeIcone } from '@/componentes/Icone';
+import { Pressionavel } from '@/componentes/Pressionavel';
+import { Secao } from '@/componentes/Secao';
+import { Texto } from '@/componentes/Texto';
+import { FORMAS_DESTAQUE } from '@/constantes/formas';
+import { cores, espaco, raios, sombras, tamanhos } from '@/constantes/tema';
 import { buscarPonto, removerPonto } from '@/servicos/pontos';
 import { mensagemErroApi } from '@/servicos/api';
 import { montarUrlFoto } from '@/servicos/fotoPonto';
@@ -28,22 +28,47 @@ import {
 import { useAutenticacao } from '@/hooks/useAutenticacao';
 import { useLocalizacaoUsuario } from '@/hooks/useLocalizacaoUsuario';
 import { distanciaKm, formatarDistancia } from '@/servicos/localizacao';
-import { CATEGORIAS } from '@/constantes/categorias';
-import {
-  Cores,
-  CoresCategorias,
-  Fontes,
-  Espacamento,
-  Bordas,
-  Sombra,
-} from '@/constantes/tema';
 import { Ponto } from '@/tipos/ponto';
 import { alertar } from '@/servicos/alerta';
+
+// Altura da foto (ou do fundo de folhas) no topo da tela.
+const ALTURA_FOTO = 280;
+
+// Linha do bloco "Informacoes": icone, rotulo e valor.
+function Informacao({
+  icone,
+  rotulo,
+  valor,
+  complemento,
+}: {
+  icone: NomeIcone;
+  rotulo: string;
+  valor: string;
+  complemento?: string;
+}) {
+  return (
+    <View style={estilos.info}>
+      <Icone nome={icone} cor={cores.primaria} />
+      <View style={estilos.infoTextos}>
+        <Texto variante="rotulo" cor={cores.tintaSuave}>
+          {rotulo}
+        </Texto>
+        <Texto>{valor}</Texto>
+        {complemento ? (
+          <Texto variante="detalhe" cor={cores.tintaSuave}>
+            {complemento}
+          </Texto>
+        ) : null}
+      </View>
+    </View>
+  );
+}
 
 export default function TelaDetalhesPonto() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { usuario } = useAutenticacao();
   const { posicao } = useLocalizacaoUsuario();
+  const margens = useSafeAreaInsets();
 
   const [ponto, setPonto] = useState<Ponto | null>(null);
   const [carregando, setCarregando] = useState(true);
@@ -211,39 +236,23 @@ export default function TelaDetalhesPonto() {
 
   if (carregando) {
     return (
-      <View style={estilos.loading}>
-        <ActivityIndicator size="large" color={Cores.primaria} />
-        <Text style={estilos.loadingTexto}>Carregando ponto...</Text>
+      <View style={estilos.raiz}>
+        <EstadoTela preencher carregando mensagem="Carregando ponto..." />
       </View>
     );
   }
 
   if (erro) {
     return (
-      <View style={estilos.loading}>
-        <MaterialCommunityIcons
-          name="alert-circle-outline"
-          size={56}
-          color={Cores.erro}
+      <View style={estilos.raiz}>
+        <EstadoTela
+          preencher
+          icone="alert-circle-outline"
+          titulo="Ops!"
+          mensagem={erro}
+          acaoSecundaria={{ rotulo: 'Voltar', onPress: () => router.back() }}
+          acao={{ rotulo: 'Tentar novamente', icone: 'refresh', onPress: carregar }}
         />
-        <Text style={estilos.erroTitulo}>Ops!</Text>
-        <Text style={estilos.erroTexto}>{erro}</Text>
-        <View style={estilos.erroBotoes}>
-          <TouchableOpacity
-            style={[estilos.btnErroSec]}
-            onPress={() => router.back()}
-          >
-            <Text style={estilos.btnErroSecTexto}>Voltar</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={estilos.btnErroPrim} onPress={carregar}>
-            <MaterialCommunityIcons
-              name="refresh"
-              size={18}
-              color={Cores.branco}
-            />
-            <Text style={estilos.btnErroPrimTexto}>Tentar novamente</Text>
-          </TouchableOpacity>
-        </View>
       </View>
     );
   }
@@ -252,701 +261,318 @@ export default function TelaDetalhesPonto() {
 
   const fotoUri = montarUrlFoto(ponto.fotoUrl);
   const ehDono = usuario?.id === ponto.usuarioId;
+  const ativo = ponto.status === 'Ativo';
 
   return (
     <View style={estilos.raiz}>
       <ScrollView showsVerticalScrollIndicator={false}>
-
-        <View style={estilos.fotoContainer}>
+        <View style={estilos.foto}>
           {fotoUri && fotoUri !== fotoComErro ? (
             <Image
               source={{ uri: fotoUri }}
               onError={() => setFotoComErro(fotoUri)}
-              style={estilos.fotoImg}
+              style={estilos.fotoImagem}
               resizeMode="cover"
             />
           ) : (
-            <View style={estilos.fotoPlaceholder}>
-              <MaterialCommunityIcons
-                name="recycle"
-                size={88}
-                color="rgba(255,255,255,0.5)"
-              />
-              <Text style={estilos.fotoPlaceholderTexto}>Sem foto</Text>
-            </View>
+            <>
+              <FundoOrganico formas={FORMAS_DESTAQUE} />
+              <View style={estilos.semFoto}>
+                <Icone
+                  nome="recycle"
+                  tamanho={tamanhos.botao + espaco.md}
+                  cor={cores.sobreEscuroSuave}
+                />
+                <Texto variante="corpoForte" cor={cores.sobreEscuroSuave}>
+                  Sem foto
+                </Texto>
+              </View>
+            </>
           )}
 
-          <View style={estilos.fotoOverlay}>
-            <TouchableOpacity
-              style={estilos.btnFlutuante}
-              onPress={() => router.back()}
-            >
-              <MaterialCommunityIcons
-                name="arrow-left"
-                size={22}
-                color={Cores.preto}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={estilos.btnFlutuante}
+          <View style={[estilos.fotoAcoes, { top: margens.top + espaco.sm }]}>
+            <BotaoIcone icone="arrow-left" rotulo="Voltar" onPress={() => router.back()} />
+            <BotaoIcone
+              icone={favorito ? 'heart' : 'heart-outline'}
+              rotulo={favorito ? 'Remover dos favoritos' : 'Salvar nos favoritos'}
+              cor={favorito ? cores.coracao : cores.tinta}
+              carregando={salvando}
               onPress={aoToggleFavorito}
-              disabled={salvando}
-            >
-              {salvando ? (
-                <ActivityIndicator size="small" color={Cores.primaria} />
-              ) : (
-                <MaterialCommunityIcons
-                  name={favorito ? 'heart' : 'heart-outline'}
-                  size={22}
-                  color={favorito ? '#FF5252' : Cores.preto}
-                />
-              )}
-            </TouchableOpacity>
+            />
           </View>
         </View>
 
-        <View style={estilos.header}>
-          <View
-            style={[
-              estilos.statusBadge,
-              {
-                backgroundColor:
-                  ponto.status === 'Ativo'
-                    ? Cores.sucessoFundo
-                    : Cores.cinzaClaro,
-              },
-            ]}
-          >
+        <View style={estilos.folha}>
+          <View style={estilos.titulo}>
             <View
               style={[
-                estilos.statusPonto,
-                {
-                  backgroundColor:
-                    ponto.status === 'Ativo'
-                      ? Cores.sucesso
-                      : Cores.cinzaMedio,
-                },
-              ]}
-            />
-            <Text
-              style={[
-                estilos.statusTexto,
-                {
-                  color:
-                    ponto.status === 'Ativo'
-                      ? Cores.sucesso
-                      : Cores.cinzaMedio,
-                },
+                estilos.status,
+                { backgroundColor: ativo ? cores.nevoa : cores.borda },
               ]}
             >
-              {ponto.status}
-            </Text>
-          </View>
-
-          <Text style={estilos.nome}>{ponto.nome}</Text>
-          <View style={estilos.bairroLinha}>
-            <MaterialCommunityIcons
-              name="map-marker"
-              size={14}
-              color={Cores.cinzaMedio}
-            />
-            <Text style={estilos.bairroTexto}>
-              {[
-                ponto.bairro,
-                posicao
-                  ? `a ${formatarDistancia(distanciaKm(posicao, ponto))} de você`
-                  : null,
-              ]
-                .filter(Boolean)
-                .join(' · ')}
-            </Text>
-          </View>
-        </View>
-
-        <View style={estilos.conteudo}>
-
-          <View style={[estilos.secao, estilos.acoesLinha]}>
-            <TouchableOpacity
-              style={estilos.btnAcao}
-              onPress={aoAbrirRota}
-              activeOpacity={0.85}
-            >
-              <MaterialCommunityIcons
-                name="directions"
-                size={20}
-                color={Cores.primaria}
+              <View
+                style={[
+                  estilos.statusPonto,
+                  { backgroundColor: ativo ? cores.floresta : cores.tintaSuave },
+                ]}
               />
-              <Text style={estilos.btnAcaoTexto}>Como chegar</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={estilos.btnAcao}
-              onPress={aoCompartilhar}
-              activeOpacity={0.85}
-            >
-              <MaterialCommunityIcons
-                name="share-variant"
-                size={20}
-                color={Cores.primaria}
-              />
-              <Text style={estilos.btnAcaoTexto}>Compartilhar</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={estilos.secao}>
-            <Text style={estilos.secaoTitulo}>Informações</Text>
-
-            <View style={estilos.infoItem}>
-              <MaterialCommunityIcons
-                name="map-marker"
-                size={20}
-                color={Cores.primaria}
-              />
-              <View style={estilos.infoTexto}>
-                <Text style={estilos.infoLabel}>Endereço</Text>
-                <Text style={estilos.infoValor}>{ponto.endereco}</Text>
-                <Text style={estilos.infoBairro}>
-                  {[ponto.bairro, ponto.cidade].filter(Boolean).join(' · ')}
-                </Text>
-              </View>
+              <Texto variante="rotulo" cor={ativo ? cores.floresta : cores.tintaSuave}>
+                {ponto.status}
+              </Texto>
             </View>
 
-            {ponto.horarioFuncionamento ? (
-              <View style={estilos.infoItem}>
-                <MaterialCommunityIcons
-                  name="clock-outline"
-                  size={20}
-                  color={Cores.primaria}
-                />
-                <View style={estilos.infoTexto}>
-                  <Text style={estilos.infoLabel}>
-                    Horário de funcionamento
-                  </Text>
-                  <Text style={estilos.infoValor}>
-                    {ponto.horarioFuncionamento}
-                  </Text>
-                </View>
-              </View>
-            ) : null}
-
-            {ponto.descricao ? (
-              <View style={estilos.infoItem}>
-                <MaterialCommunityIcons
-                  name="information-outline"
-                  size={20}
-                  color={Cores.primaria}
-                />
-                <View style={estilos.infoTexto}>
-                  <Text style={estilos.infoLabel}>Descrição</Text>
-                  <Text style={estilos.infoValor}>{ponto.descricao}</Text>
-                </View>
-              </View>
-            ) : null}
-          </View>
-
-          {ponto.categorias?.length > 0 && (
-            <View style={estilos.secao}>
-              <Text style={estilos.secaoTitulo}>Materiais aceitos</Text>
-              <View style={estilos.categoriasGrid}>
-                {ponto.categorias.map(cat => {
-                  const catLocal = CATEGORIAS.find(c => c.id === cat.id);
-                  const cor = CoresCategorias[cat.id] ?? Cores.primaria;
-                  return (
-                    <View
-                      key={cat.id}
-                      style={[
-                        estilos.categoriaChip,
-                        {
-                          backgroundColor: cor + '1A',
-                          borderColor: cor,
-                        },
-                      ]}
-                    >
-                      {catLocal && (
-                        <MaterialCommunityIcons
-                          name={catLocal.icone as any}
-                          size={16}
-                          color={cor}
-                        />
-                      )}
-                      <Text
-                        style={[
-                          estilos.categoriaChipTexto,
-                          { color: cor },
-                        ]}
-                      >
-                        {cat.nome}
-                      </Text>
-                    </View>
-                  );
-                })}
-              </View>
+            <Texto variante="display">{ponto.nome}</Texto>
+            <View style={estilos.linha}>
+              <Icone
+                nome="map-marker"
+                tamanho={tamanhos.iconeMenor}
+                cor={cores.tintaSuave}
+              />
+              <Texto cor={cores.tintaSuave} style={estilos.flexivel}>
+                {[
+                  ponto.bairro,
+                  posicao
+                    ? `a ${formatarDistancia(distanciaKm(posicao, ponto))} de você`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </Texto>
             </View>
-          )}
 
-          <View style={[estilos.secao, estilos.coordBox]}>
-            <MaterialCommunityIcons
-              name="crosshairs-gps"
-              size={18}
-              color={Cores.cinzaMedio}
-            />
-            <Text style={estilos.coordTexto}>
-              {ponto.latitude.toFixed(6)}, {ponto.longitude.toFixed(6)}
-            </Text>
+            <View style={estilos.acoes}>
+              <Botao
+                variante="suave"
+                icone="directions"
+                rotulo="Como chegar"
+                onPress={aoAbrirRota}
+                style={estilos.acao}
+              />
+              <Botao
+                variante="suave"
+                icone="share-variant"
+                rotulo="Compartilhar"
+                onPress={aoCompartilhar}
+                style={estilos.acao}
+              />
+            </View>
           </View>
+
+          <Secao titulo="Informações">
+            <View style={estilos.cartao}>
+              <Informacao
+                icone="map-marker"
+                rotulo="Endereço"
+                valor={ponto.endereco}
+                complemento={[ponto.bairro, ponto.cidade].filter(Boolean).join(' · ')}
+              />
+              {ponto.horarioFuncionamento ? (
+                <Informacao
+                  icone="clock-outline"
+                  rotulo="Horário de funcionamento"
+                  valor={ponto.horarioFuncionamento}
+                />
+              ) : null}
+              {ponto.descricao ? (
+                <Informacao
+                  icone="information-outline"
+                  rotulo="Descrição"
+                  valor={ponto.descricao}
+                />
+              ) : null}
+              <Informacao
+                icone="crosshairs-gps"
+                rotulo="Coordenadas"
+                valor={`${ponto.latitude.toFixed(6)}, ${ponto.longitude.toFixed(6)}`}
+              />
+            </View>
+          </Secao>
+
+          {ponto.categorias?.length > 0 ? (
+            <Secao titulo="Materiais aceitos">
+              <View style={estilos.categorias}>
+                {ponto.categorias.map(categoria => (
+                  <EtiquetaCategoria
+                    key={categoria.id}
+                    id={categoria.id}
+                    nome={categoria.nome}
+                    grande
+                  />
+                ))}
+              </View>
+            </Secao>
+          ) : null}
 
           {/* Leva ao perfil (nome, total de pontos e mapa) de quem cadastrou. */}
-          <TouchableOpacity
-            style={[estilos.secao, estilos.perfilLink]}
+          <Pressionavel
+            style={[estilos.cartao, estilos.perfil]}
+            escala={0.98}
             onPress={() =>
               router.push({
                 pathname: '/pessoa/[id]',
                 params: { id: String(ponto.usuarioId) },
               })
             }
-            activeOpacity={0.85}
           >
-            <MaterialCommunityIcons
-              name="account-circle-outline"
-              size={22}
-              color={Cores.primaria}
-            />
-            <Text style={estilos.perfilLinkTexto}>
+            <Icone nome="account-circle-outline" cor={cores.primaria} />
+            <Texto variante="corpoForte" style={estilos.flexivel}>
               {ehDono ? 'Ver meu perfil na comunidade' : 'Ver perfil de quem cadastrou'}
-            </Text>
-            <MaterialCommunityIcons
-              name="chevron-right"
-              size={20}
-              color={Cores.cinzaMedio}
-            />
-          </TouchableOpacity>
+            </Texto>
+            <Icone nome="chevron-right" cor={cores.tintaFraca} />
+          </Pressionavel>
 
           {/* Gerenciar: so para quem cadastrou o ponto (a API tambem valida). */}
           {ehDono ? (
-            <View style={[estilos.secao, estilos.gerenciarBox]}>
-              <View style={estilos.gerenciarCabecalho}>
-                <MaterialCommunityIcons
-                  name="shield-account"
-                  size={20}
-                  color={Cores.primaria}
-                />
-                <View style={estilos.gerenciarTextoArea}>
-                  <Text style={estilos.gerenciarTitulo}>Gerenciar ponto</Text>
-                  <Text style={estilos.gerenciarSub}>
+            <View style={[estilos.cartao, estilos.gerenciar]}>
+              <View style={estilos.linha}>
+                <Icone nome="shield-account" cor={cores.primaria} />
+                <View style={estilos.flexivel}>
+                  <Texto variante="cartao">Gerenciar ponto</Texto>
+                  <Texto variante="detalhe" cor={cores.tintaSuave}>
                     Edite ou exclua as informações deste ponto.
-                  </Text>
+                  </Texto>
                 </View>
               </View>
 
-              <View style={estilos.gerenciarAcoes}>
-                <TouchableOpacity
-                  style={[estilos.btnGerenciar, estilos.btnEditarPonto]}
+              <View style={estilos.acoes}>
+                <Botao
+                  icone="pencil"
+                  rotulo="Editar"
                   onPress={aoEditarPonto}
-                  activeOpacity={0.85}
-                >
-                  <MaterialCommunityIcons
-                    name="pencil"
-                    size={18}
-                    color={Cores.branco}
-                  />
-                  <Text style={estilos.btnEditarTexto}>Editar</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    estilos.btnGerenciar,
-                    estilos.btnExcluirPonto,
-                    excluindo && estilos.btnDesabilitado,
-                  ]}
+                  style={estilos.acao}
+                />
+                <Botao
+                  variante="perigoSuave"
+                  icone="trash-can-outline"
+                  rotulo="Excluir"
+                  carregando={excluindo}
                   onPress={aoConfirmarExcluir}
-                  disabled={excluindo}
-                  activeOpacity={0.85}
-                >
-                  {excluindo ? (
-                    <ActivityIndicator size="small" color={Cores.erro} />
-                  ) : (
-                    <>
-                      <MaterialCommunityIcons
-                        name="trash-can-outline"
-                        size={18}
-                        color={Cores.erro}
-                      />
-                      <Text style={estilos.btnExcluirTexto}>Excluir</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
+                  style={estilos.acao}
+                />
               </View>
             </View>
           ) : null}
         </View>
       </ScrollView>
 
-      <View style={estilos.rodape}>
-        <TouchableOpacity
-          style={[
-            estilos.btnFavoritoGrande,
-            favorito && estilos.btnFavoritoAtivo,
-          ]}
+      <View style={[estilos.rodape, { paddingBottom: margens.bottom + espaco.md }]}>
+        <Botao
+          variante={favorito ? 'perigoSuave' : 'primario'}
+          icone={favorito ? 'heart-off' : 'heart-plus'}
+          rotulo={favorito ? 'Remover dos favoritos' : 'Salvar nos favoritos'}
+          carregando={salvando}
           onPress={aoToggleFavorito}
-          disabled={salvando}
-          activeOpacity={0.85}
-        >
-          {salvando ? (
-            <ActivityIndicator
-              color={favorito ? Cores.erro : Cores.branco}
-              size="small"
-            />
-          ) : (
-            <>
-              <MaterialCommunityIcons
-                name={favorito ? 'heart-off' : 'heart-plus'}
-                size={20}
-                color={favorito ? Cores.erro : Cores.branco}
-              />
-              <Text
-                style={[
-                  estilos.btnFavoritoTexto,
-                  favorito && { color: Cores.erro },
-                ]}
-              >
-                {favorito ? 'Remover dos favoritos' : 'Salvar nos favoritos'}
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
+        />
       </View>
     </View>
   );
 }
 
 const estilos = StyleSheet.create({
-  raiz: { flex: 1, backgroundColor: Cores.cinzaClaro },
+  raiz: { flex: 1, backgroundColor: cores.fundo },
+  flexivel: { flex: 1 },
+  linha: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: espaco.xs,
+  },
 
-  loading: {
+  foto: {
+    height: ALTURA_FOTO,
+    backgroundColor: cores.floresta,
+    overflow: 'hidden',
+  },
+  fotoImagem: {
+    width: '100%',
+    height: '100%',
+  },
+  semFoto: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Cores.cinzaClaro,
-    padding: Espacamento.lg,
-    gap: Espacamento.sm,
+    gap: espaco.xxs,
   },
-  loadingTexto: {
-    fontSize: Fontes.normal,
-    color: Cores.cinzaMedio,
-    marginTop: Espacamento.sm,
-  },
-  erroTitulo: {
-    fontSize: Fontes.titulo,
-    fontWeight: Fontes.muitoNegrito,
-    color: Cores.preto,
-    marginTop: Espacamento.sm,
-  },
-  erroTexto: {
-    fontSize: Fontes.normal,
-    color: Cores.cinzaEscuro,
-    textAlign: 'center',
-    marginBottom: Espacamento.md,
-  },
-  erroBotoes: {
-    flexDirection: 'row',
-    gap: Espacamento.sm,
-  },
-  btnErroSec: {
-    paddingHorizontal: Espacamento.lg,
-    paddingVertical: Espacamento.sm + 2,
-    borderRadius: Bordas.raio,
-    borderWidth: 1.5,
-    borderColor: Cores.cinzaBorda,
-    backgroundColor: Cores.branco,
-  },
-  btnErroSecTexto: {
-    fontSize: Fontes.normal,
-    color: Cores.cinzaEscuro,
-    fontWeight: Fontes.negrito,
-  },
-  btnErroPrim: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: Espacamento.lg,
-    paddingVertical: Espacamento.sm + 2,
-    borderRadius: Bordas.raio,
-    backgroundColor: Cores.primaria,
-  },
-  btnErroPrimTexto: {
-    fontSize: Fontes.normal,
-    color: Cores.branco,
-    fontWeight: Fontes.negrito,
-  },
-
-  fotoContainer: {
-    width: '100%',
-    height: 240,
-    backgroundColor: Cores.primaria,
-  },
-  fotoImg: {
-    width: '100%',
-    height: '100%',
-  },
-  fotoPlaceholder: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: Cores.primaria,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-  },
-  fotoPlaceholderTexto: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: Fontes.normal,
-    fontWeight: Fontes.medio_peso,
-  },
-  fotoOverlay: {
+  fotoAcoes: {
     position: 'absolute',
-    top: 48,
-    left: Espacamento.lg,
-    right: Espacamento.lg,
+    left: espaco.xl,
+    right: espaco.xl,
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  btnFlutuante: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Sombra.padrao,
-  },
 
-  header: {
-    backgroundColor: Cores.branco,
-    paddingHorizontal: Espacamento.lg,
-    paddingTop: Espacamento.md,
-    paddingBottom: Espacamento.md,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    marginTop: -24,
+  // Sobe por cima da foto, com os cantos de cima arredondados.
+  folha: {
+    gap: espaco.xl,
+    marginTop: -raios.lg,
+    paddingTop: espaco.xl,
+    paddingBottom: espaco.xl,
+    borderTopLeftRadius: raios.lg,
+    borderTopRightRadius: raios.lg,
+    backgroundColor: cores.fundo,
   },
-  statusBadge: {
+  titulo: {
+    gap: espaco.xs,
+    paddingHorizontal: espaco.xl,
+  },
+  status: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    paddingHorizontal: Espacamento.sm,
-    paddingVertical: 4,
-    borderRadius: Bordas.raioTotal,
-    marginBottom: Espacamento.xs,
+    gap: espaco.xs,
+    paddingHorizontal: espaco.sm,
+    paddingVertical: espaco.xxs,
+    borderRadius: raios.total,
   },
   statusPonto: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginRight: 6,
+    width: espaco.xs,
+    height: espaco.xs,
+    borderRadius: raios.total,
   },
-  statusTexto: {
-    fontSize: Fontes.pequena,
-    fontWeight: Fontes.muitoNegrito,
-  },
-  nome: {
-    fontSize: Fontes.tituloGrande,
-    fontWeight: Fontes.muitoNegrito,
-    color: Cores.preto,
-    lineHeight: 32,
-  },
-  bairroLinha: {
+  acoes: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 4,
+    gap: espaco.xs,
+    marginTop: espaco.xs,
   },
-  bairroTexto: {
-    fontSize: Fontes.normal,
-    color: Cores.cinzaMedio,
-  },
-
-  conteudo: { padding: Espacamento.lg, paddingTop: Espacamento.md },
-
-  secao: { marginBottom: Espacamento.lg },
-
-  acoesLinha: {
-    flexDirection: 'row',
-    gap: Espacamento.sm,
-  },
-  btnAcao: {
+  acao: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: Cores.primariaFundo,
-    borderRadius: Bordas.raio,
-    paddingVertical: Espacamento.sm + 4,
-  },
-  btnAcaoTexto: {
-    fontSize: Fontes.normal,
-    fontWeight: Fontes.negrito,
-    color: Cores.primaria,
-  },
-  secaoTitulo: {
-    fontSize: Fontes.media,
-    fontWeight: Fontes.muitoNegrito,
-    color: Cores.preto,
-    marginBottom: Espacamento.sm,
+    paddingHorizontal: espaco.sm,
   },
 
-  infoItem: {
+  cartao: {
+    gap: espaco.md,
+    padding: espaco.md,
+    borderRadius: raios.lg,
+    backgroundColor: cores.superficie,
+    ...sombras.baixa,
+  },
+  info: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: Cores.branco,
-    borderRadius: Bordas.raio,
-    padding: Espacamento.md,
-    marginBottom: Espacamento.sm,
-    ...Sombra.suave,
+    gap: espaco.sm,
   },
-  infoTexto: { flex: 1, marginLeft: Espacamento.sm },
-  infoLabel: {
-    fontSize: Fontes.pequena,
-    color: Cores.cinzaMedio,
-    fontWeight: Fontes.medio_peso,
-    marginBottom: 2,
+  infoTextos: {
+    flex: 1,
+    gap: espaco.xxs / 2,
   },
-  infoValor: {
-    fontSize: Fontes.normal,
-    color: Cores.preto,
-  },
-  infoBairro: {
-    fontSize: Fontes.pequena,
-    color: Cores.cinzaMedio,
-    marginTop: 2,
-  },
-
-  categoriasGrid: {
+  categorias: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Espacamento.sm,
+    gap: espaco.xs,
   },
-  categoriaChip: {
+  perfil: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1.5,
-    borderRadius: Bordas.raioTotal,
-    paddingHorizontal: Espacamento.sm,
-    paddingVertical: 6,
-    gap: 4,
+    gap: espaco.sm,
+    marginHorizontal: espaco.xl,
   },
-  categoriaChipTexto: {
-    fontSize: Fontes.pequena,
-    fontWeight: Fontes.negrito,
-  },
-
-  coordBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Espacamento.xs,
-  },
-  coordTexto: {
-    fontSize: Fontes.pequena,
-    color: Cores.cinzaMedio,
-  },
-
-  perfilLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Espacamento.sm,
-    backgroundColor: Cores.branco,
-    borderRadius: Bordas.raio,
-    padding: Espacamento.md,
-  },
-  perfilLinkTexto: {
-    flex: 1,
-    fontSize: Fontes.normal,
-    fontWeight: Fontes.medio_peso,
-    color: Cores.preto,
-  },
-
-  gerenciarBox: {
-    backgroundColor: Cores.branco,
-    borderRadius: Bordas.raio,
-    padding: Espacamento.md,
-    ...Sombra.suave,
-  },
-  gerenciarCabecalho: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Espacamento.md,
-    gap: Espacamento.sm,
-  },
-  gerenciarTextoArea: {
-    flex: 1,
-  },
-  gerenciarTitulo: {
-    fontSize: Fontes.media,
-    fontWeight: Fontes.muitoNegrito,
-    color: Cores.preto,
-  },
-  gerenciarSub: {
-    fontSize: Fontes.pequena,
-    color: Cores.cinzaMedio,
-    marginTop: 1,
-  },
-  gerenciarAcoes: {
-    flexDirection: 'row',
-    gap: Espacamento.sm,
-  },
-  btnGerenciar: {
-    flex: 1,
-    height: 44,
-    borderRadius: Bordas.raio,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-  },
-  btnEditarPonto: {
-    backgroundColor: Cores.primaria,
-  },
-  btnExcluirPonto: {
-    backgroundColor: Cores.erroFundo,
-    borderWidth: 1.5,
-    borderColor: Cores.erro,
-  },
-  btnDesabilitado: {
-    opacity: 0.7,
-  },
-  btnEditarTexto: {
-    fontSize: Fontes.normal,
-    color: Cores.branco,
-    fontWeight: Fontes.negrito,
-  },
-  btnExcluirTexto: {
-    fontSize: Fontes.normal,
-    color: Cores.erro,
-    fontWeight: Fontes.negrito,
+  gerenciar: {
+    marginHorizontal: espaco.xl,
   },
 
   rodape: {
-    padding: Espacamento.lg,
-    backgroundColor: Cores.branco,
-    borderTopWidth: 1,
-    borderTopColor: Cores.cinzaBorda,
-  },
-  btnFavoritoGrande: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Cores.primaria,
-    borderRadius: Bordas.raio,
-    height: 52,
-    gap: Espacamento.sm,
-  },
-  btnFavoritoAtivo: {
-    backgroundColor: Cores.erroFundo,
-    borderWidth: 1.5,
-    borderColor: Cores.erro,
-  },
-  btnFavoritoTexto: {
-    fontSize: Fontes.media,
-    fontWeight: Fontes.muitoNegrito,
-    color: Cores.branco,
+    paddingTop: espaco.md,
+    paddingHorizontal: espaco.xl,
+    backgroundColor: cores.superficie,
+    ...sombras.alta,
   },
 });

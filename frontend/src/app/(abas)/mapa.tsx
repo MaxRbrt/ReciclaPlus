@@ -6,14 +6,8 @@
 // oferece o cadastro de um ponto naquele local.
 // ============================================================
 
-import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MapView, {
   Callout,
   MapViewRef,
@@ -23,18 +17,22 @@ import MapView, {
   PROVIDER_DEFAULT,
 } from "@/componentes/MapaNativo";
 import { router, useLocalSearchParams } from "expo-router";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect, useRef, useState } from "react";
 import * as Location from "expo-location";
+import { BalaoPonto } from "@/componentes/BalaoPonto";
+import { BotaoFlutuante } from "@/componentes/BotaoFlutuante";
+import { BotaoIcone } from "@/componentes/BotaoIcone";
+import { FiltroCategorias } from "@/componentes/FiltroCategorias";
+import { Icone } from "@/componentes/Icone";
+import { Texto } from "@/componentes/Texto";
 import { usePontos } from "@/hooks/usePontos";
-import { CATEGORIAS } from "@/constantes/categorias";
 import {
-  Bordas,
-  Cores,
-  CoresCategorias,
-  Espacamento,
-  Fontes,
-  Sombra,
+  cores,
+  coresCategorias,
+  espaco,
+  raios,
+  sombras,
+  tamanhos,
 } from "@/constantes/tema";
 import { Ponto } from "@/tipos/ponto";
 import { alertar } from "@/servicos/alerta";
@@ -57,6 +55,7 @@ export default function TelaMapa() {
   // novo no mesmo ponto volte a centralizar.
   const params = useLocalSearchParams<{ pontoId?: string; foco?: string }>();
   const chaveFoco = params.pontoId ? `${params.pontoId}:${params.foco ?? ""}` : null;
+  const margens = useSafeAreaInsets();
 
   const mapaRef = useRef<MapViewRef>(null);
   const marcadoresRef = useRef<Record<number, MarkerRef | null>>({});
@@ -64,7 +63,7 @@ export default function TelaMapa() {
   const [locUsuario, setLocUsuario] = useState<Coordenada | null>(null);
 
   // Marcador temporario gerado pelo toque longo do usuario no mapa.
-  // Mantemos no state para poder limpar/exibir o pin amarelo.
+  // Mantemos no state para poder limpar/exibir o pin escuro.
   const [marcadorTemp, setMarcadorTemp] = useState<Coordenada | null>(null);
 
   const [categoriaSelecionada, setCategoria] = useState<number | undefined>(
@@ -168,15 +167,15 @@ export default function TelaMapa() {
   // como referencia. Se nao tem categoria, verde primario.
   function corMarcador(ponto: Ponto): string {
     if (!ponto.categorias?.length) {
-      return Cores.primaria;
+      return cores.primaria;
     }
 
-    return CoresCategorias[ponto.categorias[0].id] ?? Cores.primaria;
+    return coresCategorias[ponto.categorias[0].id] ?? cores.primaria;
   }
 
   // ----- Handler: toque longo no mapa -----
   // Recebe o evento nativo (lat/lng do ponto tocado). Mostra um
-  // marcador amarelo temporario e pergunta se quer cadastrar.
+  // marcador escuro temporario e pergunta se quer cadastrar.
   // Toque simples fica reservado para marcadores e callouts.
   function aoSegurarMapa(evento: LongPressEvent) {
     const { latitude, longitude } = evento.nativeEvent.coordinate;
@@ -243,137 +242,85 @@ export default function TelaMapa() {
             pinColor={corMarcador(ponto)}
           >
             <Callout onPress={() => router.push(`/ponto/${ponto.id}`)}>
-              <View style={estilos.callout}>
-                <Text style={estilos.calloutNome} numberOfLines={2}>
-                  {ponto.nome}
-                </Text>
-                <Text style={estilos.calloutBairro}>{ponto.bairro}</Text>
-                {ponto.horarioFuncionamento ? (
-                  <Text style={estilos.calloutHorario}>
-                    {ponto.horarioFuncionamento}
-                  </Text>
-                ) : null}
-                <Text style={estilos.calloutVer}>Toque para ver detalhes</Text>
-              </View>
+              <BalaoPonto
+                nome={ponto.nome}
+                linha={ponto.bairro}
+                horario={ponto.horarioFuncionamento}
+              />
             </Callout>
           </Marker>
         ))}
 
-        {/* Marcador temporario (do toque longo) - cor ambar destacada. */}
+        {/* Marcador temporario (do toque longo) - cor escura destacada. */}
         {marcadorTemp ? (
           <Marker
             coordinate={marcadorTemp}
-            pinColor={Cores.acento}
+            pinColor={cores.floresta}
             zIndex={9999}
           />
         ) : null}
       </MapView>
 
-      {/* Dica de uso flutuante (so mostra quando nao ha pin temp) */}
-      {!marcadorTemp ? (
-        <View style={estilos.dica}>
-          <MaterialCommunityIcons
-            name="gesture-tap-hold"
-            size={14}
-            color={Cores.primaria}
-          />
-          <Text style={estilos.dicaTexto}>
-            Segure no mapa para cadastrar um novo ponto
-          </Text>
-        </View>
-      ) : null}
-
       {/* Filtro categorias */}
-      <View style={estilos.filtroContainer}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={estilos.filtroScroll}
-        >
-          <TouchableOpacity
-            style={[estilos.chip, !categoriaSelecionada && estilos.chipAtivo]}
-            onPress={() => setCategoria(undefined)}
-            activeOpacity={0.85}
-          >
-            <Text
-              style={[
-                estilos.chipTexto,
-                !categoriaSelecionada && estilos.chipTextoAtivo,
-              ]}
-            >
-              Todos
-            </Text>
-          </TouchableOpacity>
+      <FiltroCategorias
+        selecionada={categoriaSelecionada}
+        aoSelecionar={setCategoria}
+        style={[estilos.filtro, { top: margens.top + espaco.sm }]}
+      />
 
-          {CATEGORIAS.map((cat) => {
-            const ativo = categoriaSelecionada === cat.id;
-
-            return (
-              <TouchableOpacity
-                key={cat.id}
-                style={[
-                  estilos.chip,
-                  ativo && { backgroundColor: cat.cor, borderColor: cat.cor },
-                ]}
-                onPress={() => setCategoria(ativo ? undefined : cat.id)}
-                activeOpacity={0.85}
-              >
-                <MaterialCommunityIcons
-                  name={cat.icone as any}
-                  size={13}
-                  color={ativo ? Cores.branco : cat.cor}
-                  style={{ marginRight: 3 }}
-                />
-                <Text
-                  style={[estilos.chipTexto, ativo && estilos.chipTextoAtivo]}
-                >
-                  {cat.nome}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+      {/* Dica de uso (so mostra quando nao ha pin temp) e botao recentrar GPS */}
+      <View style={estilos.faixa} pointerEvents="box-none">
+        {!marcadorTemp ? (
+          <View style={[estilos.pilula, estilos.dica]}>
+            <Icone
+              nome="gesture-tap-hold"
+              tamanho={tamanhos.iconeMenor}
+              cor={cores.primaria}
+            />
+            <Texto variante="detalhe" style={estilos.dicaTexto}>
+              Segure no mapa para cadastrar um novo ponto
+            </Texto>
+          </View>
+        ) : (
+          <View style={estilos.dica} />
+        )}
+        <BotaoIcone
+          icone="crosshairs-gps"
+          rotulo="Centralizar na minha localização"
+          cor={cores.primaria}
+          onPress={recentrar}
+        />
       </View>
 
       {/* Contador de pontos */}
-      <View style={estilos.contador}>
+      <View
+        style={[
+          estilos.pilula,
+          estilos.contador,
+          { top: margens.top + espaco.sm + tamanhos.chip + espaco.sm },
+        ]}
+      >
         {carregando ? (
-          <ActivityIndicator size="small" color={Cores.primaria} />
+          <ActivityIndicator size="small" color={cores.primaria} />
         ) : (
-          <View style={estilos.contadorLinha}>
-            <MaterialCommunityIcons
-              name="map-marker"
-              size={14}
-              color={Cores.primaria}
+          <>
+            <Icone
+              nome="map-marker"
+              tamanho={tamanhos.iconeMenor}
+              cor={cores.primaria}
             />
-            <Text style={estilos.contadorTexto}>
+            <Texto variante="corpoForte">
               {pontos.length} {pontos.length === 1 ? "ponto" : "pontos"}
-            </Text>
-          </View>
+            </Texto>
+          </>
         )}
       </View>
 
-      {/* Botao recentrar GPS */}
-      <TouchableOpacity
-        style={estilos.btnRecentrar}
-        onPress={recentrar}
-        activeOpacity={0.85}
-      >
-        <MaterialCommunityIcons
-          name="crosshairs-gps"
-          size={22}
-          color={Cores.primaria}
-        />
-      </TouchableOpacity>
-
-      {/* FAB novo ponto (sem coordenadas - abre form vazio) */}
-      <TouchableOpacity
-        style={estilos.fab}
+      {/* Novo ponto (sem coordenadas - abre form vazio) */}
+      <BotaoFlutuante
+        rotulo="Novo ponto"
         onPress={() => router.push("/ponto/novo")}
-        activeOpacity={0.85}
-      >
-        <MaterialCommunityIcons name="plus" size={28} color={Cores.branco} />
-      </TouchableOpacity>
+      />
     </View>
   );
 }
@@ -382,138 +329,44 @@ const estilos = StyleSheet.create({
   raiz: { flex: 1 },
   mapa: { flex: 1 },
 
-  // ------ Dica flutuante ------
-  dica: {
+  filtro: {
     position: "absolute",
-    bottom: 150,
-    // Ocupa a largura livre a esquerda do botao de recentrar (44 px), para
-    // os dois nao se sobreporem em telas estreitas.
-    left: Espacamento.lg,
-    right: Espacamento.lg + 44 + Espacamento.sm,
-    justifyContent: "center",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: Cores.branco,
-    paddingHorizontal: Espacamento.md,
-    paddingVertical: 8,
-    borderRadius: Bordas.raioTotal,
-    ...Sombra.padrao,
-  },
-  dicaTexto: {
-    flexShrink: 1,
-    fontSize: Fontes.pequena,
-    color: Cores.cinzaEscuro,
-    fontWeight: Fontes.medio_peso,
-  },
-
-  // ------ Callout do marcador ------
-  callout: {
-    width: 200,
-    padding: Espacamento.sm,
-  },
-  calloutNome: {
-    fontSize: Fontes.normal,
-    fontWeight: Fontes.negrito,
-    color: Cores.preto,
-    marginBottom: 2,
-  },
-  calloutBairro: {
-    fontSize: Fontes.pequena,
-    color: Cores.cinzaMedio,
-  },
-  calloutHorario: {
-    fontSize: Fontes.pequena,
-    color: Cores.secundaria,
-    marginTop: 2,
-  },
-  calloutVer: {
-    fontSize: Fontes.pequena,
-    color: Cores.primaria,
-    fontWeight: Fontes.medio_peso,
-    marginTop: Espacamento.xs,
-  },
-
-  // ------ Filtro categorias ------
-  filtroContainer: {
-    position: "absolute",
-    top: 56,
     left: 0,
     right: 0,
   },
-  filtroScroll: {
-    paddingHorizontal: Espacamento.md,
-    gap: Espacamento.sm,
-  },
-  chip: {
+
+  // Pilula branca flutuante sobre o mapa.
+  pilula: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Cores.branco,
-    borderWidth: 1.5,
-    borderColor: Cores.cinzaBorda,
-    borderRadius: Bordas.raioTotal,
-    paddingHorizontal: Espacamento.sm,
-    paddingVertical: 6,
-    ...Sombra.suave,
+    gap: espaco.xs,
+    minHeight: tamanhos.toque,
+    paddingHorizontal: espaco.md,
+    borderRadius: raios.total,
+    backgroundColor: cores.superficie,
+    ...sombras.alta,
   },
-  chipAtivo: {
-    backgroundColor: Cores.primaria,
-    borderColor: Cores.primaria,
-  },
-  chipTexto: {
-    fontSize: Fontes.pequena,
-    fontWeight: Fontes.medio_peso,
-    color: Cores.cinzaEscuro,
-  },
-  chipTextoAtivo: { color: Cores.branco },
 
-  // ------ Contador ------
+  // Linha acima do botao flutuante: dica a esquerda, recentrar a direita.
+  faixa: {
+    position: "absolute",
+    left: espaco.xl,
+    right: espaco.xl,
+    bottom: espaco.xl + tamanhos.botao + espaco.sm,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: espaco.xs,
+  },
+  dica: {
+    flex: 1,
+  },
+  dicaTexto: {
+    flexShrink: 1,
+  },
+
+  // Logo abaixo da faixa de filtros.
   contador: {
     position: "absolute",
-    bottom: 90,
-    alignSelf: "center",
-    backgroundColor: Cores.branco,
-    borderRadius: Bordas.raioTotal,
-    paddingHorizontal: Espacamento.md,
-    paddingVertical: 6,
-    ...Sombra.padrao,
-  },
-  contadorLinha: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  contadorTexto: {
-    fontSize: Fontes.pequena,
-    fontWeight: Fontes.medio_peso,
-    color: Cores.preto,
-  },
-
-  // ------ Botao recentrar ------
-  btnRecentrar: {
-    position: "absolute",
-    bottom: 150,
-    right: Espacamento.lg,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Cores.branco,
-    alignItems: "center",
-    justifyContent: "center",
-    ...Sombra.padrao,
-  },
-
-  // ------ FAB ------
-  fab: {
-    position: "absolute",
-    bottom: Espacamento.xl,
-    right: Espacamento.lg,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: Cores.primaria,
-    alignItems: "center",
-    justifyContent: "center",
-    ...Sombra.forte,
+    left: espaco.xl,
   },
 });

@@ -8,34 +8,24 @@
 //   - Aba "Pontos": pontos de todas as pessoas -> abre o mapa no ponto
 // ============================================================
 
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import {
-  Bordas,
-  Cores,
-  Espacamento,
-  Fontes,
-  Gradientes,
-  Sombra,
-} from "@/constantes/tema";
+import { FlatList, ScrollView, StyleSheet, View } from "react-native";
+import { Avatar } from "@/componentes/Avatar";
+import { CabecalhoTela } from "@/componentes/CabecalhoTela";
+import { CampoBusca } from "@/componentes/CampoBusca";
+import { CartaoPonto } from "@/componentes/CartaoPonto";
+import { Chip } from "@/componentes/Chip";
+import { EstadoTela } from "@/componentes/EstadoTela";
+import { Icone } from "@/componentes/Icone";
+import { Pressionavel } from "@/componentes/Pressionavel";
+import { Texto } from "@/componentes/Texto";
+import { cores, espaco, raios, sombras, tamanhos } from "@/constantes/tema";
 import {
   listarCidades,
   listarPessoas,
   listarPontosDaComunidade,
 } from "@/servicos/comunidade";
-import { MiniaturaPonto } from "@/componentes/MiniaturaPonto";
 import { CidadeComunidade, PessoaComunidade } from "@/tipos/comunidade";
 import { Ponto } from "@/tipos/ponto";
 
@@ -48,77 +38,37 @@ function rotuloPontos(total: number): string {
   return `${total} ${total === 1 ? "ponto" : "pontos"}`;
 }
 
-function CardPessoa({ pessoa }: { pessoa: PessoaComunidade }) {
+function CartaoPessoa({ pessoa }: { pessoa: PessoaComunidade }) {
   return (
-    <TouchableOpacity
-      style={estilos.card}
+    <Pressionavel
+      style={estilos.cartao}
+      escala={0.98}
       onPress={() =>
         router.push({ pathname: "/pessoa/[id]", params: { id: String(pessoa.id) } })
       }
-      activeOpacity={0.85}
     >
-      <View style={estilos.avatar}>
-        <Text style={estilos.avatarTexto}>
-          {pessoa.nome.trim().charAt(0).toUpperCase()}
-        </Text>
-      </View>
-      <View style={estilos.cardInfo}>
-        <Text style={estilos.cardTitulo} numberOfLines={1}>
+      <Avatar nome={pessoa.nome} />
+      <View style={estilos.cartaoInfo}>
+        <Texto variante="cartao" numberOfLines={1}>
           {pessoa.nome}
-        </Text>
-        <Text style={estilos.cardDestaque}>
+        </Texto>
+        <Texto variante="detalhe" cor={cores.primaria}>
           {rotuloPontos(pessoa.totalPontos)}{" "}
           {pessoa.totalPontos === 1 ? "cadastrado" : "cadastrados"}
-        </Text>
+        </Texto>
       </View>
-      <MaterialCommunityIcons
-        name="chevron-right"
-        size={20}
-        color={Cores.cinzaMedio}
-      />
-    </TouchableOpacity>
+      <Icone nome="chevron-right" cor={cores.tintaFraca} />
+    </Pressionavel>
   );
 }
 
-function CardPontoComunidade({ ponto }: { ponto: Ponto }) {
-  // Abre a aba Mapa centralizada neste ponto. "foco" muda a cada toque para
-  // que o mapa volte a centralizar mesmo se o ponto for o mesmo de antes.
-  function verNoMapa() {
-    router.push({
-      pathname: "/(abas)/mapa",
-      params: { pontoId: String(ponto.id), foco: String(Date.now()) },
-    });
-  }
-
-  return (
-    <TouchableOpacity
-      style={estilos.card}
-      onPress={verNoMapa}
-      activeOpacity={0.85}
-    >
-      <View style={estilos.cardIcone}>
-        <MiniaturaPonto fotoUrl={ponto.fotoUrl} tamanho={44} />
-      </View>
-      <View style={estilos.cardInfo}>
-        <Text style={estilos.cardTitulo} numberOfLines={1}>
-          {ponto.nome}
-        </Text>
-        <Text style={estilos.cardLinha} numberOfLines={1}>
-          {[ponto.bairro, ponto.cidade].filter(Boolean).join(" · ")}
-        </Text>
-        {ponto.usuarioNome ? (
-          <Text style={estilos.cardDestaque} numberOfLines={1}>
-            Cadastrado por {ponto.usuarioNome}
-          </Text>
-        ) : null}
-      </View>
-      <MaterialCommunityIcons
-        name="map-search-outline"
-        size={20}
-        color={Cores.cinzaMedio}
-      />
-    </TouchableOpacity>
-  );
+// Abre a aba Mapa centralizada no ponto. "foco" muda a cada toque para
+// que o mapa volte a centralizar mesmo se o ponto for o mesmo de antes.
+function verNoMapa(ponto: Ponto) {
+  router.push({
+    pathname: "/(abas)/mapa",
+    params: { pontoId: String(ponto.id), foco: String(Date.now()) },
+  });
 }
 
 export default function TelaComunidade() {
@@ -200,74 +150,35 @@ export default function TelaComunidade() {
 
   return (
     <View style={estilos.raiz}>
-      <LinearGradient
-        colors={Gradientes.verde}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={estilos.header}
+      <CabecalhoTela
+        titulo="Comunidade"
+        subtitulo="Veja onde já existem pontos de coleta e quem os cadastrou"
       >
-        <Text style={estilos.headerTitulo}>Comunidade</Text>
-        <Text style={estilos.headerSub}>
-          Veja onde já existem pontos de coleta e quem os cadastrou
-        </Text>
-        {/* Espaco para a busca sobrepor */}
-        <View style={{ height: 24 }} />
-      </LinearGradient>
-
-      <View style={estilos.buscaContainer}>
-        <MaterialCommunityIcons
-          name="city-variant-outline"
-          size={20}
-          color={Cores.cinzaMedio}
-          style={estilos.buscaIcone}
-        />
-        <TextInput
-          style={estilos.buscaInput}
-          value={busca}
-          onChangeText={setBusca}
+        <CampoBusca
+          valor={busca}
+          aoMudar={setBusca}
           placeholder="Buscar por cidade..."
-          placeholderTextColor={Cores.cinzaMedio}
-          autoCorrect={false}
-          clearButtonMode="while-editing"
+          icone="city-variant-outline"
         />
-        {busca.length > 0 ? (
-          <TouchableOpacity
-            onPress={() => setBusca("")}
-            hitSlop={8}
-            accessibilityLabel="Limpar busca"
-          >
-            <MaterialCommunityIcons
-              name="close-circle"
-              size={18}
-              color={Cores.cinzaMedio}
-            />
-          </TouchableOpacity>
-        ) : null}
-      </View>
+      </CabecalhoTela>
 
       {/* Atalhos: cidades que ja tem ponto de coleta */}
       {cidades.length > 0 ? (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          style={estilos.chips}
-          contentContainerStyle={estilos.chipsConteudo}
+          style={estilos.cidades}
+          contentContainerStyle={estilos.cidadesConteudo}
         >
           {cidades.map((item) => {
             const ativo = item.cidade.toLowerCase() === cidade.toLowerCase();
             return (
-              <TouchableOpacity
+              <Chip
                 key={item.cidade}
-                style={[estilos.chip, ativo && estilos.chipAtivo]}
+                rotulo={`${item.cidade} · ${item.totalPontos}`}
+                ativo={ativo}
                 onPress={() => setBusca(ativo ? "" : item.cidade)}
-                activeOpacity={0.85}
-              >
-                <Text
-                  style={[estilos.chipTexto, ativo && estilos.chipTextoAtivo]}
-                >
-                  {item.cidade} · {item.totalPontos}
-                </Text>
-              </TouchableOpacity>
+              />
             );
           })}
         </ScrollView>
@@ -278,88 +189,70 @@ export default function TelaComunidade() {
         {(["pessoas", "pontos"] as const).map((opcao) => {
           const ativa = aba === opcao;
           const total = opcao === "pessoas" ? pessoas.length : pontos.length;
+          const corConteudo = ativa ? cores.sobreEscuro : cores.tintaSuave;
           return (
-            <TouchableOpacity
+            <Pressionavel
               key={opcao}
               style={[estilos.aba, ativa && estilos.abaAtiva]}
               onPress={() => setAba(opcao)}
-              activeOpacity={0.85}
               role="tab"
               aria-selected={ativa}
             >
-              <MaterialCommunityIcons
-                name={opcao === "pessoas" ? "account-group" : "map-marker-multiple"}
-                size={16}
-                color={ativa ? Cores.branco : Cores.cinzaEscuro}
+              <Icone
+                nome={opcao === "pessoas" ? "account-group" : "map-marker-multiple"}
+                tamanho={tamanhos.iconeMenor}
+                cor={corConteudo}
               />
-              <Text style={[estilos.abaTexto, ativa && estilos.abaTextoAtiva]}>
+              <Texto variante="corpoForte" cor={corConteudo}>
                 {opcao === "pessoas" ? "Pessoas" : "Pontos"}
                 {carregando ? "" : ` (${total})`}
-              </Text>
-            </TouchableOpacity>
+              </Texto>
+            </Pressionavel>
           );
         })}
       </View>
 
       {carregando ? (
-        <View style={estilos.estado}>
-          <ActivityIndicator color={Cores.primaria} size="large" />
-          <Text style={estilos.estadoTexto}>Carregando comunidade...</Text>
-        </View>
+        <EstadoTela preencher carregando mensagem="Carregando comunidade..." />
       ) : null}
 
       {erro && !carregando ? (
-        <View style={estilos.estado}>
-          <MaterialCommunityIcons
-            name="wifi-off"
-            size={48}
-            color={Cores.cinzaMedio}
-          />
-          <Text style={estilos.estadoTitulo}>Erro de conexão</Text>
-          <Text style={estilos.estadoTexto}>{erro}</Text>
-          <TouchableOpacity style={estilos.btnTentar} onPress={carregar}>
-            <MaterialCommunityIcons
-              name="refresh"
-              size={16}
-              color={Cores.primaria}
-            />
-            <Text style={estilos.btnTentarTexto}>Tentar novamente</Text>
-          </TouchableOpacity>
-        </View>
+        <EstadoTela
+          preencher
+          icone="wifi-off"
+          titulo="Erro de conexão"
+          mensagem={erro}
+          acao={{ rotulo: "Tentar novamente", icone: "refresh", onPress: carregar }}
+        />
       ) : null}
 
       {!carregando && !erro && totalItens === 0 ? (
-        <View style={estilos.estado}>
-          <MaterialCommunityIcons
-            name={filtrando ? "map-search-outline" : "account-group-outline"}
-            size={48}
-            color={Cores.cinzaMedio}
-          />
-          <Text style={estilos.estadoTitulo}>
-            {filtrando
+        <EstadoTela
+          preencher
+          icone={filtrando ? "map-search-outline" : "account-group-outline"}
+          titulo={
+            filtrando
               ? `Nenhum ponto em "${cidade}"`
-              : "Ainda não há pontos cadastrados"}
-          </Text>
-          <Text style={estilos.estadoTexto}>
-            {filtrando
+              : "Ainda não há pontos cadastrados"
+          }
+          mensagem={
+            filtrando
               ? "Confira o nome da cidade ou seja o primeiro a cadastrar um ponto lá."
-              : "Seja o primeiro a cadastrar um ponto de coleta!"}
-          </Text>
-          <TouchableOpacity
-            style={estilos.btnTentar}
-            onPress={() => router.push("/ponto/novo")}
-          >
-            <MaterialCommunityIcons name="plus" size={16} color={Cores.primaria} />
-            <Text style={estilos.btnTentarTexto}>Cadastrar ponto</Text>
-          </TouchableOpacity>
-        </View>
+              : "Seja o primeiro a cadastrar um ponto de coleta!"
+          }
+          acao={{
+            rotulo: "Cadastrar ponto",
+            icone: "plus",
+            onPress: () => router.push("/ponto/novo"),
+          }}
+        />
       ) : null}
 
       {!carregando && !erro && totalItens > 0 && aba === "pessoas" ? (
         <FlatList
           data={pessoas}
           keyExtractor={(item) => String(item.id)}
-          renderItem={({ item }) => <CardPessoa pessoa={item} />}
+          renderItem={({ item }) => <CartaoPessoa pessoa={item} />}
           contentContainerStyle={estilos.lista}
           showsVerticalScrollIndicator={false}
           refreshing={atualizando}
@@ -371,7 +264,19 @@ export default function TelaComunidade() {
         <FlatList
           data={pontos}
           keyExtractor={(item) => String(item.id)}
-          renderItem={({ item }) => <CardPontoComunidade ponto={item} />}
+          renderItem={({ item }) => (
+            <CartaoPonto
+              nome={item.nome}
+              fotoUrl={item.fotoUrl}
+              linhas={[[item.bairro, item.cidade].filter(Boolean).join(" · ")]}
+              destaque={
+                item.usuarioNome ? `Cadastrado por ${item.usuarioNome}` : null
+              }
+              iconeDestaque="account-outline"
+              acao={<Icone nome="map-search-outline" cor={cores.tintaFraca} />}
+              onPress={() => verNoMapa(item)}
+            />
+          )}
           contentContainerStyle={estilos.lista}
           showsVerticalScrollIndicator={false}
           refreshing={atualizando}
@@ -385,204 +290,62 @@ export default function TelaComunidade() {
 const estilos = StyleSheet.create({
   raiz: {
     flex: 1,
-    backgroundColor: Cores.cinzaClaro,
-  },
-
-  // ------------ HEADER ------------
-  header: {
-    paddingTop: 56,
-    paddingBottom: Espacamento.lg,
-    paddingHorizontal: Espacamento.lg,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-  },
-  headerTitulo: {
-    fontSize: Fontes.titulo,
-    fontWeight: Fontes.muitoNegrito,
-    color: Cores.branco,
-  },
-  headerSub: {
-    fontSize: Fontes.normal,
-    color: "rgba(255,255,255,0.85)",
-    marginTop: 2,
-  },
-
-  // ------------ BUSCA ------------
-  buscaContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Cores.branco,
-    marginHorizontal: Espacamento.lg,
-    marginTop: -24, // sobrepoe o espaco reservado no header
-    borderRadius: Bordas.raio,
-    paddingHorizontal: Espacamento.sm,
-    ...Sombra.padrao,
-  },
-  buscaIcone: {
-    marginRight: Espacamento.xs,
-  },
-  buscaInput: {
-    flex: 1,
-    height: 48,
-    fontSize: Fontes.normal,
-    color: Cores.preto,
+    backgroundColor: cores.fundo,
   },
 
   // ------------ CHIPS DE CIDADE ------------
-  chips: {
-    marginTop: Espacamento.md,
-    maxHeight: 44,
-    // Sem isto a lista abaixo (flex: 1) espreme a faixa e corta os chips.
+  // Sem flexGrow/flexShrink 0, a lista abaixo (flex: 1) espreme a faixa.
+  cidades: {
+    marginTop: espaco.md,
     flexGrow: 0,
     flexShrink: 0,
   },
-  chipsConteudo: {
-    paddingHorizontal: Espacamento.lg,
-    gap: Espacamento.sm,
+  cidadesConteudo: {
+    paddingHorizontal: espaco.xl,
+    gap: espaco.xs,
     alignItems: "center",
-  },
-  chip: {
-    borderWidth: 1.5,
-    borderColor: Cores.cinzaBorda,
-    borderRadius: Bordas.raioTotal,
-    paddingHorizontal: Espacamento.md,
-    paddingVertical: 6,
-    backgroundColor: Cores.branco,
-  },
-  chipAtivo: {
-    backgroundColor: Cores.primaria,
-    borderColor: Cores.primaria,
-  },
-  chipTexto: {
-    fontSize: Fontes.pequena,
-    fontWeight: Fontes.medio_peso,
-    color: Cores.cinzaEscuro,
-  },
-  chipTextoAtivo: {
-    color: Cores.branco,
   },
 
   // ------------ ALTERNADOR ------------
   abas: {
     flexDirection: "row",
-    gap: Espacamento.sm,
-    marginHorizontal: Espacamento.lg,
-    marginTop: Espacamento.md,
+    gap: espaco.xxs,
+    marginHorizontal: espaco.xl,
+    marginTop: espaco.md,
+    padding: espaco.xxs,
+    borderRadius: raios.total,
+    backgroundColor: cores.nevoa,
   },
   aba: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 6,
-    paddingVertical: Espacamento.sm + 2,
-    borderRadius: Bordas.raio,
-    backgroundColor: Cores.branco,
-    borderWidth: 1.5,
-    borderColor: Cores.cinzaBorda,
+    gap: espaco.xs,
+    minHeight: tamanhos.toque,
+    borderRadius: raios.total,
   },
   abaAtiva: {
-    backgroundColor: Cores.primaria,
-    borderColor: Cores.primaria,
-  },
-  abaTexto: {
-    fontSize: Fontes.normal,
-    fontWeight: Fontes.negrito,
-    color: Cores.cinzaEscuro,
-  },
-  abaTextoAtiva: {
-    color: Cores.branco,
+    backgroundColor: cores.primaria,
   },
 
-  // ------------ LISTA E CARDS ------------
+  // ------------ LISTA E CARTAO DE PESSOA ------------
   lista: {
-    padding: Espacamento.lg,
-    gap: Espacamento.sm,
+    gap: espaco.sm,
+    padding: espaco.xl,
+    paddingTop: espaco.md,
   },
-  card: {
-    backgroundColor: Cores.branco,
-    borderRadius: Bordas.raioGrande,
-    padding: Espacamento.md,
+  cartao: {
     flexDirection: "row",
     alignItems: "center",
-    ...Sombra.suave,
+    gap: espaco.sm,
+    padding: espaco.md,
+    borderRadius: raios.lg,
+    backgroundColor: cores.superficie,
+    ...sombras.baixa,
   },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Cores.primaria,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: Espacamento.sm,
-  },
-  avatarTexto: {
-    fontSize: Fontes.grande,
-    fontWeight: Fontes.muitoNegrito,
-    color: Cores.branco,
-  },
-  cardIcone: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Cores.primariaFundo,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: Espacamento.sm,
-  },
-  cardInfo: {
+  cartaoInfo: {
     flex: 1,
-    gap: 2,
-    marginRight: Espacamento.sm,
-  },
-  cardTitulo: {
-    fontSize: Fontes.media,
-    fontWeight: Fontes.muitoNegrito,
-    color: Cores.preto,
-  },
-  cardLinha: {
-    fontSize: Fontes.pequena,
-    color: Cores.cinzaEscuro,
-  },
-  cardDestaque: {
-    fontSize: Fontes.pequena,
-    color: Cores.secundaria,
-    fontWeight: Fontes.medio_peso,
-  },
-
-  // ------------ ESTADOS ------------
-  estado: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: Espacamento.sm,
-    padding: Espacamento.lg,
-  },
-  estadoTitulo: {
-    fontSize: Fontes.media,
-    fontWeight: Fontes.muitoNegrito,
-    color: Cores.cinzaEscuro,
-    marginTop: Espacamento.xs,
-    textAlign: "center",
-  },
-  estadoTexto: {
-    fontSize: Fontes.normal,
-    color: Cores.cinzaMedio,
-    textAlign: "center",
-  },
-  btnTentar: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: Espacamento.lg,
-    paddingVertical: Espacamento.sm,
-    backgroundColor: Cores.primariaFundo,
-    borderRadius: Bordas.raioTotal,
-    marginTop: Espacamento.sm,
-  },
-  btnTentarTexto: {
-    fontSize: Fontes.normal,
-    color: Cores.primaria,
-    fontWeight: Fontes.negrito,
+    gap: espaco.xxs / 2,
   },
 });

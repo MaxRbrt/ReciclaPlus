@@ -6,104 +6,94 @@
 // ============================================================
 
 import { Tabs } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { Cores } from "@/constantes/tema";
+import { StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Icone, NomeIcone } from "@/componentes/Icone";
+import { cores, espaco, raios, tamanhos, tipografia } from "@/constantes/tema";
 
-// Tipo auxiliar para tipar o nome dos icones do Ionicons
-type NomeIcone = React.ComponentProps<typeof Ionicons>["name"];
-
-// Componente do icone da aba (ativo = cor primaria, inativo = cinza)
-function IconeAba({ nome, focado }: { nome: NomeIcone; focado: boolean }) {
+// Icone da aba: cheio sobre uma pilula verde-clara quando ativa.
+function IconeAba({
+  nome,
+  nomeAtivo,
+  focado,
+}: {
+  nome: NomeIcone;
+  nomeAtivo: NomeIcone;
+  focado: boolean;
+}) {
   return (
-    <Ionicons
-      name={nome}
-      size={24}
-      color={focado ? Cores.primaria : Cores.cinzaMedio}
-    />
+    <View style={[estilos.icone, focado && estilos.iconeAtivo]}>
+      <Icone
+        nome={focado ? nomeAtivo : nome}
+        tamanho={tamanhos.iconeMaior - 2}
+        cor={focado ? cores.primaria : cores.tintaFraca}
+      />
+    </View>
   );
 }
 
+const ABAS: { rota: string; titulo: string; nome: NomeIcone; nomeAtivo: NomeIcone }[] = [
+  { rota: "index",      titulo: "Início",     nome: "home-variant-outline",          nomeAtivo: "home-variant" },
+  { rota: "mapa",       titulo: "Mapa",       nome: "map-outline",                   nomeAtivo: "map" },
+  { rota: "lista",      titulo: "Pontos",     nome: "map-marker-multiple-outline",   nomeAtivo: "map-marker-multiple" },
+  { rota: "comunidade", titulo: "Comunidade", nome: "account-group-outline",         nomeAtivo: "account-group" },
+  { rota: "favoritos",  titulo: "Favoritos",  nome: "heart-outline",                 nomeAtivo: "heart" },
+];
+
 export default function LayoutAbas() {
+  const margens = useSafeAreaInsets();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Cores.primaria,
-        tabBarInactiveTintColor: Cores.cinzaMedio,
-        tabBarStyle: {
-          backgroundColor: Cores.branco,
-          borderTopColor: Cores.cinzaClaro,
-          height: 60,
-          paddingBottom: 8,
-        },
+        tabBarActiveTintColor: cores.primaria,
+        tabBarInactiveTintColor: cores.tintaSuave,
+        tabBarLabelStyle: estilos.rotulo,
+        tabBarStyle: [
+          estilos.barra,
+          {
+            height: tamanhos.barraAbas + margens.bottom,
+            paddingBottom: margens.bottom,
+          },
+        ],
       }}
     >
-      {/* ABA 1: Home */}
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Início",
-          tabBarIcon: ({ focused }) => (
-            <IconeAba
-              nome={focused ? "home" : "home-outline"}
-              focado={focused}
-            />
-          ),
-        }}
-      />
-
-      {/* ABA 2: Mapa */}
-      <Tabs.Screen
-        name="mapa"
-        options={{
-          title: "Mapa",
-          tabBarIcon: ({ focused }) => (
-            <IconeAba nome={focused ? "map" : "map-outline"} focado={focused} />
-          ),
-        }}
-      />
-
-      {/* ABA 3: Lista */}
-      <Tabs.Screen
-        name="lista"
-        options={{
-          title: "Pontos",
-          tabBarIcon: ({ focused }) => (
-            <IconeAba
-              nome={focused ? "list" : "list-outline"}
-              focado={focused}
-            />
-          ),
-        }}
-      />
-
-      {/* ABA 4: Comunidade */}
-      <Tabs.Screen
-        name="comunidade"
-        options={{
-          title: "Comunidade",
-          tabBarIcon: ({ focused }) => (
-            <IconeAba
-              nome={focused ? "people" : "people-outline"}
-              focado={focused}
-            />
-          ),
-        }}
-      />
-
-      {/* ABA 5: Favoritos */}
-      <Tabs.Screen
-        name="favoritos"
-        options={{
-          title: "Favoritos",
-          tabBarIcon: ({ focused }) => (
-            <IconeAba
-              nome={focused ? "heart" : "heart-outline"}
-              focado={focused}
-            />
-          ),
-        }}
-      />
+      {ABAS.map((aba) => (
+        <Tabs.Screen
+          key={aba.rota}
+          name={aba.rota}
+          options={{
+            title: aba.titulo,
+            tabBarIcon: ({ focused }) => (
+              <IconeAba nome={aba.nome} nomeAtivo={aba.nomeAtivo} focado={focused} />
+            ),
+          }}
+        />
+      ))}
     </Tabs>
   );
 }
+
+const estilos = StyleSheet.create({
+  // A altura e a folga inferior vem da area segura, calculadas no layout.
+  barra: {
+    backgroundColor: cores.superficie,
+    borderTopWidth: 0,
+    paddingTop: espaco.xs,
+  },
+  rotulo: {
+    ...tipografia.aba,
+    marginTop: espaco.xxs,
+  },
+  icone: {
+    width: tamanhos.toque + espaco.xs,
+    height: tamanhos.iconeMaior + espaco.xs,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: raios.total,
+  },
+  iconeAtivo: {
+    backgroundColor: cores.nevoa,
+  },
+});
