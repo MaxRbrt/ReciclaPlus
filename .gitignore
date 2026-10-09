@@ -43,8 +43,11 @@ example
 # fotos enviadas pelos usuarios
 backend/uploads/
 
-# skills de terceiros para o Claude Code (Three.js), instaladas so neste projeto
-.claude/skills/threejs-*/
+# configuracao e skills locais do Claude Code (uso local)
+.claude/
+
+# capturas e logs do navegador de automacao usado nos testes visuais
+.playwright-mcp/
 
 # rascunho de prompt para sessao de redesenho (uso local)
 PROMPT-REDESIGN.md
