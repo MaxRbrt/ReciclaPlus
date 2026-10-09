@@ -6,6 +6,7 @@
 // ============================================================
 
 import { Request, Response, NextFunction } from 'express';
+import { ambiente } from '../configuracao/ambiente';
 
 // Erros do proprio Express ao ler o corpo (JSON malformado, corpo grande
 // demais) trazem o status HTTP correto; sao falha do cliente, nao do servidor.
@@ -18,7 +19,9 @@ export function middlewareErros(
   erro: Error & { status?: number },
   req: Request,
   res: Response,
-  next: NextFunction
+  // Nao usado, mas obrigatorio: o Express identifica o middleware de erro
+  // pelos quatro parametros.
+  _next: NextFunction
 ): void {
   const mensagemCliente = erro.status ? MENSAGENS_CLIENTE[erro.status] : undefined;
   if (erro.status && mensagemCliente) {
@@ -30,6 +33,6 @@ export function middlewareErros(
 
   res.status(500).json({
     erro: 'Erro interno do servidor.',
-    detalhe: process.env.NODE_ENV === 'development' ? erro.message : undefined,
+    detalhe: ambiente.emDesenvolvimento ? erro.message : undefined,
   });
 }

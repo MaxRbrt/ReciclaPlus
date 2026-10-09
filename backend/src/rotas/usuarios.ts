@@ -34,7 +34,7 @@ const limitadorCadastro = rateLimit({
 // POST /usuarios — Cadastrar novo usuario
 router.post('/', limitadorCadastro, tratarAsync(UsuarioControlador.cadastrar));
 
-// POST /login — Autenticar usuario e retornar JWT
+// POST /usuarios/login — Autenticar usuario e retornar JWT
 router.post('/login', limitadorLogin, tratarAsync(UsuarioControlador.entrar));
 
 // Confirmacao de senha (trocar senha, excluir conta): limita tentativas erradas

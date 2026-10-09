@@ -17,10 +17,10 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { isAxiosError } from 'axios';
 import * as servicoAuth from '@/servicos/autenticacao';
 import { Cores, Fontes, Espacamento, Bordas, Sombra } from '@/constantes/tema';
 import { alertar } from '@/servicos/alerta';
+import { mensagemErroApi } from '@/servicos/api';
 
 export default function TelaCadastrar() {
   const [nome, setNome]                       = useState('');
@@ -76,13 +76,12 @@ export default function TelaCadastrar() {
         [{ text: 'OK', onPress: () => router.replace('/(auth)/entrar') }]
       );
     } catch (erro) {
-      const mensagemApi = isAxiosError(erro)
-        ? (erro.response?.data as { erro?: string } | undefined)?.erro
-        : undefined;
-
       alertar(
         'Erro ao cadastrar',
-        mensagemApi ?? 'Não foi possível criar a conta. Verifique sua conexão e tente novamente.'
+        mensagemErroApi(
+          erro,
+          'Não foi possível criar a conta. Verifique sua conexão e tente novamente.'
+        )
       );
     } finally {
       setCarregando(false);

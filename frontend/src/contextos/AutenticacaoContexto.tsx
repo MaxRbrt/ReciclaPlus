@@ -4,15 +4,13 @@
 // Disponibiliza para todas as telas:
 //   - usuario: dados do usuario logado (ou null se deslogado)
 //   - carregando: true enquanto verifica se ha sessao salva
-//   - entrar(): realiza o login
-//   - sair(): realiza o logout
+//   - entrar(), sair(): login e logout
+//   - atualizarNome(), excluirConta(): acoes da tela Minha conta
 //
-// Como usar nas telas:
-//   const { usuario, entrar, sair } = useContext(AutenticacaoContexto);
-// Ou usar o hook useAutenticacao() que ja faz isso.
+// Nas telas, use o hook useAutenticacao().
 // ============================================================
 
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useState, useEffect, ReactNode } from 'react';
 import { Usuario, DadosLogin } from '@/tipos/usuario';
 import * as servicoAuth from '@/servicos/autenticacao';
 import { registrarAoNaoAutorizado } from '@/servicos/api';
@@ -37,7 +35,7 @@ export function AutenticacaoProvider({ children }: { children: ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [carregando, setCarregando] = useState(true);
 
-  // Ao iniciar o app, verifica se ja existe sessao salva no AsyncStorage
+  // Ao iniciar o app, verifica se ja existe sessao salva no aparelho
   useEffect(() => {
     async function verificarSessao() {
       try {
@@ -59,13 +57,14 @@ export function AutenticacaoProvider({ children }: { children: ReactNode }) {
     verificarSessao();
   }, []);
 
-  // Registra o callback global de "nao autorizado" (HTTP 401).
-  // Quando o interceptor do axios detectar token expirado/invalido,
-  // ele chama esse handler para zerar o usuario em memoria —
-  // o GuardaDeRotas entao redireciona para a tela de login.
-  // O cleanup remove o handler ao desmontar o provider (ex: testes).
+  // Quando a API responde 401 (token invalido ou expirado), o interceptor do
+  // axios chama este handler: a sessao salva e apagada e, sem usuario, o
+  // GuardaDeRotas leva para a tela de login.
   useEffect(() => {
-    registrarAoNaoAutorizado(() => setUsuario(null));
+    registrarAoNaoAutorizado(async () => {
+      await servicoAuth.sair();
+      setUsuario(null);
+    });
     return () => registrarAoNaoAutorizado(null);
   }, []);
 
@@ -75,7 +74,7 @@ export function AutenticacaoProvider({ children }: { children: ReactNode }) {
     setUsuario(resposta.usuario);
   }
 
-  // Realiza logout: limpa AsyncStorage e zera o estado
+  // Realiza logout: apaga a sessao salva e zera o estado
   async function sair() {
     await servicoAuth.sair();
     setUsuario(null);

@@ -4,6 +4,7 @@
 
 import { pool } from '../configuracao/bancoDados';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
+import { COLUNAS_PONTO } from './PontoModelo';
 
 interface FavoritoDB extends RowDataPacket {
   id: number;
@@ -12,37 +13,12 @@ interface FavoritoDB extends RowDataPacket {
   criado_em: string;
 }
 
+// Ponto favoritado: as colunas do ponto mais o id do favorito.
 interface FavoritoComPontoDB extends RowDataPacket {
   favorito_id: number;
   id: number;
   nome: string;
-  descricao: string;
-  endereco: string;
-  bairro: string;
-  latitude: number;
-  longitude: number;
-  foto_url: string;
-  horario_funcionamento: string;
-  status: string;
-  usuario_id: number;
-  criado_em: string;
 }
-
-const COLUNAS_PONTO = `
-  p.id,
-  p.nome,
-  p.descricao,
-  p.endereco,
-  p.bairro,
-  p.cidade,
-  CAST(p.latitude AS DOUBLE) AS latitude,
-  CAST(p.longitude AS DOUBLE) AS longitude,
-  p.foto_url,
-  p.horario_funcionamento,
-  p.status,
-  p.usuario_id,
-  p.criado_em
-`;
 
 export const FavoritoModelo = {
 
@@ -50,7 +26,8 @@ export const FavoritoModelo = {
     const [linhas] = await pool.execute<FavoritoComPontoDB[]>(
       `SELECT f.id AS favorito_id, ${COLUNAS_PONTO}
        FROM favoritos f
-       JOIN pontos_coleta p ON f.ponto_id = p.id
+       JOIN pontos_coleta p ON p.id = f.ponto_id
+       JOIN usuarios u ON u.id = p.usuario_id
        WHERE f.usuario_id = ?
        ORDER BY f.criado_em DESC`,
       [usuarioId]

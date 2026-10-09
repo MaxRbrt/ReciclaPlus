@@ -5,12 +5,7 @@
 import { Request, Response } from 'express';
 import { FavoritoModelo } from '../modelos/FavoritoModelo';
 import { PontoModelo } from '../modelos/PontoModelo';
-
-// Ids chegam como texto (URL) ou em JSON; so inteiro positivo segue para o banco.
-function lerId(valor: unknown): number | null {
-  const id = Number(valor);
-  return Number.isInteger(id) && id > 0 ? id : null;
-}
+import { lerId } from '../utilitarios/parametros';
 
 export const FavoritoControlador = {
 

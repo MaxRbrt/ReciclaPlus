@@ -36,7 +36,7 @@ function GuardaDeRotas({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    // Enquanto verifica AsyncStorage, nao mexe na navegacao
+    // Enquanto verifica a sessao salva, nao mexe na navegacao
     if (carregando) return;
 
     // Detecta em qual grupo o usuario esta agora

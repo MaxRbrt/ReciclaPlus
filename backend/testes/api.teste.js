@@ -408,7 +408,13 @@ async function testarFotoEExclusao(ana, bia, ponto, foto1) {
     // Limpeza: excluir a conta leva junto pontos, favoritos e fotos.
     for (const [pessoa, conta] of [[ana, contaAna], [bia, contaBia]]) {
       if (pessoa.excluida) continue;
-      await chamar('DELETE', '/usuarios/eu', { token: pessoa.token, corpo: { senha: conta.senha } }).catch(() => {});
+      const exclusao = await chamar('DELETE', '/usuarios/eu', {
+        token: pessoa.token, corpo: { senha: conta.senha },
+      }).catch(() => null);
+      // Sem limpeza (ex.: limite de requisicoes), a conta fica no banco: avisa.
+      if (exclusao?.status !== 204) {
+        console.warn(`AVISO: a conta temporaria ${conta.email} nao foi removida; apague-a do banco.`);
+      }
     }
   }
 

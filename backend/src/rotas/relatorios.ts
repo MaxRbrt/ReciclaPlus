@@ -1,6 +1,6 @@
 // ============================================================
 // ROTAS: Relatorios
-// Dados agregados para o dashboard do app.
+// Totais agregados de pontos ativos. O app ainda nao consome estas rotas.
 // ============================================================
 
 import { Router } from 'express';

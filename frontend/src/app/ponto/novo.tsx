@@ -66,10 +66,6 @@ export default function TelaNovoPonto() {
     );
   }
 
-  async function preencherEnderecoPorCoords(lat: number, lng: number) {
-    await preencherEnderecoSeVazio(lat, lng, setEndereco, setBairro, setCidade);
-  }
-
   // Mantem camera e galeria como opcoes explicitas para o usuario.
   function aoTocarFoto() {
     alertar(
@@ -110,7 +106,13 @@ export default function TelaNovoPonto() {
       });
       setLatitude(loc.coords.latitude);
       setLongitude(loc.coords.longitude);
-      await preencherEnderecoPorCoords(loc.coords.latitude, loc.coords.longitude);
+      await preencherEnderecoSeVazio(
+        loc.coords.latitude,
+        loc.coords.longitude,
+        setEndereco,
+        setBairro,
+        setCidade
+      );
     } catch {
       alertar('Erro', 'Não foi possível obter a localização.');
     } finally {

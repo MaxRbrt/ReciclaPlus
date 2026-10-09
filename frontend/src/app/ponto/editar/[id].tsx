@@ -109,10 +109,6 @@ export default function TelaEditarPonto() {
     );
   }
 
-  async function preencherEnderecoPorCoords(lat: number, lng: number) {
-    await preencherEnderecoSeVazio(lat, lng, setEndereco, setBairro, setCidade);
-  }
-
   function aoTocarFoto() {
     alertar(
       'Foto do ponto',
@@ -152,7 +148,13 @@ export default function TelaEditarPonto() {
       });
       setLatitude(loc.coords.latitude);
       setLongitude(loc.coords.longitude);
-      await preencherEnderecoPorCoords(loc.coords.latitude, loc.coords.longitude);
+      await preencherEnderecoSeVazio(
+        loc.coords.latitude,
+        loc.coords.longitude,
+        setEndereco,
+        setBairro,
+        setCidade
+      );
     } catch {
       alertar('Erro', 'Não foi possível obter a localização.');
     } finally {

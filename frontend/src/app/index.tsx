@@ -3,7 +3,7 @@
 // Rota: /
 //
 // FUNCAO:
-//   Tela exibida pelo split de meio segundo entre o app abrir
+//   Tela exibida no breve intervalo entre o app abrir
 //   e o GuardaDeRotas (em _layout.tsx) decidir para onde
 //   redirecionar (login ou abas).
 //

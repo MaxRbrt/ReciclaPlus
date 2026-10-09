@@ -120,7 +120,7 @@ export const UsuarioControlador = {
     res.status(201).json(usuarioSemSenha);
   },
 
-  // POST /login — Autenticar usuario
+  // POST /usuarios/login — Autenticar usuario
   async entrar(req: Request, res: Response): Promise<void> {
     const { email, senha } = req.body;
     const emailNormalizado = String(email ?? '').trim().toLowerCase();

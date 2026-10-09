@@ -1,12 +1,10 @@
 // ============================================================
 // TIPOS: Categoria
-// Define a estrutura de uma categoria de material reciclavel.
-// Exemplo: Papel, Plastico, Vidro, Metal...
-// Usado em: servicos/categorias, telas de cadastro e filtros
+// Categoria de material reciclavel, como vem da API dentro de cada ponto.
+// Icone e cor de cada categoria ficam em constantes/categorias.
 // ============================================================
 
-// Categoria retornada pela API
 export interface Categoria {
   id: number;
-  nome: string; // Ex: "Papel", "Plastico", "Vidro"
+  nome: string; // Ex: "Papel", "Plástico", "Vidro"
 }

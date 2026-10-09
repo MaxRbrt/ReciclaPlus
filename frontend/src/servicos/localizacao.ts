@@ -121,7 +121,7 @@ interface RespostaNominatim {
 
 const URL_NOMINATIM = 'https://nominatim.openstreetmap.org/reverse';
 
-export async function obterEnderecoPorCoordenadas(
+async function obterEnderecoPorCoordenadas(
   latitude: number,
   longitude: number
 ): Promise<EnderecoPorCoordenadas | null> {

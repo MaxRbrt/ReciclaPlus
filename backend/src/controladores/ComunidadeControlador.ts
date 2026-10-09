@@ -7,6 +7,7 @@
 import { Request, Response } from 'express';
 import { ComunidadeModelo } from '../modelos/ComunidadeModelo';
 import { PontoModelo } from '../modelos/PontoModelo';
+import { lerId } from '../utilitarios/parametros';
 
 const MAXIMO_CIDADE = 120;
 
@@ -21,11 +22,6 @@ function lerCidade(req: Request, res: Response): string | undefined | null {
     return null;
   }
   return valor.trim() || undefined;
-}
-
-function lerId(valor: unknown): number | null {
-  const id = Number(valor);
-  return Number.isInteger(id) && id > 0 ? id : null;
 }
 
 export const ComunidadeControlador = {

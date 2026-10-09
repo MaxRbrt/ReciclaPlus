@@ -4,14 +4,8 @@ import { Request, Response } from 'express';
 import { PontoModelo } from '../modelos/PontoModelo';
 import { CategoriaModelo } from '../modelos/CategoriaModelo';
 import { removerFoto } from '../utilitarios/fotos';
+import { lerId } from '../utilitarios/parametros';
 import { validarAtualizacaoPonto, validarNovoPonto } from '../utilitarios/validarPonto';
-
-// Ids vem da URL como texto; qualquer coisa que nao seja inteiro positivo
-// e tratada como "nao encontrado" em vez de chegar ao banco.
-function lerId(valor: unknown): number | null {
-  const id = Number(valor);
-  return Number.isInteger(id) && id > 0 ? id : null;
-}
 
 // Carrega o ponto e garante que o usuario autenticado e o dono.
 // Responde 404/403 e retorna null quando nao pode prosseguir.

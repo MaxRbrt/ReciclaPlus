@@ -1,6 +1,9 @@
 // ============================================================
-// TELA: Mapa - VERSAO COM TAP PARA CADASTRAR
+// TELA: Mapa
 // Rota: /(abas)/mapa
+//
+// Toque em um marcador abre o balao do ponto; toque longo em area vazia
+// oferece o cadastro de um ponto naquele local.
 // ============================================================
 
 import {
@@ -60,7 +63,7 @@ export default function TelaMapa() {
   const [mapaPronto, setMapaPronto] = useState(false);
   const [locUsuario, setLocUsuario] = useState<Coordenada | null>(null);
 
-  // Marcador temporario gerado pelo toque do usuario no mapa.
+  // Marcador temporario gerado pelo toque longo do usuario no mapa.
   // Mantemos no state para poder limpar/exibir o pin amarelo.
   const [marcadorTemp, setMarcadorTemp] = useState<Coordenada | null>(null);
 
@@ -256,7 +259,7 @@ export default function TelaMapa() {
           </Marker>
         ))}
 
-        {/* Marcador temporario (do toque do usuario) - cor ambar destacada. */}
+        {/* Marcador temporario (do toque longo) - cor ambar destacada. */}
         {marcadorTemp ? (
           <Marker
             coordinate={marcadorTemp}

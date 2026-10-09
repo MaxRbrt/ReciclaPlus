@@ -8,9 +8,9 @@
 
 import * as SecureStore from 'expo-secure-store';
 
-// IMPORTANTE: chaves do SecureStore so aceitam [A-Za-z0-9._-].
-// Caracteres como '@' e ':' fazem getItemAsync/setItemAsync lancar erro,
-// o que quebrava TODA requisicao (o interceptor le o token a cada request).
+// Chaves do SecureStore so aceitam [A-Za-z0-9._-]. Com '@' ou ':' as funcoes
+// lancam erro, e como o interceptor da API le o token a cada requisicao,
+// todas as chamadas falhariam.
 const CHAVE_TOKEN = 'reciclaplus_token';
 
 // Salva o token JWT no armazenamento seguro do dispositivo

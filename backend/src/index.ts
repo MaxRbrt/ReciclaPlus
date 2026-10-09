@@ -10,7 +10,14 @@ import helmet from 'helmet';
 import { ambiente } from './configuracao/ambiente';
 import { testarConexao } from './configuracao/bancoDados';
 import { middlewareErros } from './middlewares/erros';
+import { PontoModelo } from './modelos/PontoModelo';
 import { converterChaves } from './utilitarios/camelCase';
+import {
+  PASTA_UPLOADS,
+  PREFIXO_URL_FOTOS,
+  garantirPastaUploads,
+  limparFotosOrfas,
+} from './utilitarios/fotos';
 
 // Importa os arquivos de rotas
 import rotasUsuarios from './rotas/usuarios';
@@ -20,13 +27,6 @@ import rotasFavoritos from './rotas/favoritos';
 import rotasRelatorios from './rotas/relatorios';
 import rotasUploads from './rotas/uploads';
 import rotasComunidade from './rotas/comunidade';
-import {
-  PASTA_UPLOADS,
-  PREFIXO_URL_FOTOS,
-  garantirPastaUploads,
-  limparFotosOrfas,
-} from './utilitarios/fotos';
-import { PontoModelo } from './modelos/PontoModelo';
 
 const app = express();
 
@@ -35,16 +35,15 @@ const app = express();
 app.disable('x-powered-by');
 app.use(helmet());
 
+// Porta do Metro, que serve a versao web do app em desenvolvimento.
 const origensPadraoDesenvolvimento = [
-  'http://localhost:19006',
-  'http://127.0.0.1:19006',
   'http://localhost:8081',
   'http://127.0.0.1:8081',
 ];
 
 const origensPermitidas = ambiente.cors.origensPermitidas.length > 0
   ? ambiente.cors.origensPermitidas
-  : process.env.NODE_ENV === 'development'
+  : ambiente.emDesenvolvimento
     ? origensPadraoDesenvolvimento
     : [];
 
@@ -100,7 +99,7 @@ app.use(PREFIXO_URL_FOTOS, express.static(PASTA_UPLOADS, {
 }));
 
 // Rota de health check — testar se a API esta rodando
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   res.json({ mensagem: 'API Recicla+ funcionando!', versao: '1.0.0' });
 });
 

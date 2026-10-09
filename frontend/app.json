@@ -39,19 +39,17 @@
         "expo-image-picker",
         {
           "photosPermission": "Recicla+ acessa suas fotos para selecionar imagens dos pontos de coleta.",
-          "cameraPermission": "Recicla+ usa a camera para fotografar pontos de coleta no local."
+          "cameraPermission": "Recicla+ usa a câmera para fotografar pontos de coleta no local."
         }
       ],
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Recicla+ usa sua localizacao para encontrar pontos de coleta proximos."
+          "locationAlwaysAndWhenInUsePermission": "Recicla+ usa sua localização para encontrar pontos de coleta próximos."
         }
       ],
       "expo-secure-store",
       "expo-font",
-      "expo-image",
-      "expo-web-browser",
       "expo-status-bar"
     ],
     "experiments": {

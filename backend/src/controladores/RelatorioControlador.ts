@@ -1,6 +1,6 @@
 // ============================================================
 // CONTROLADOR: Relatorios
-// Retorna dados agregados para o dashboard do app.
+// Totais agregados de pontos ativos. O app ainda nao consome estas rotas.
 // ============================================================
 
 import { Request, Response } from 'express';
@@ -9,7 +9,7 @@ import { pool } from '../configuracao/bancoDados';
 export const RelatorioControlador = {
 
   // GET /relatorios/pontos-por-categoria
-  async pontosPorCategoria(req: Request, res: Response): Promise<void> {
+  async pontosPorCategoria(_req: Request, res: Response): Promise<void> {
     const [linhas] = await pool.execute(`
       SELECT c.nome AS categoria, COUNT(p.id) AS total
       FROM categorias c
@@ -22,7 +22,7 @@ export const RelatorioControlador = {
   },
 
   // GET /relatorios/pontos-por-bairro
-  async pontosPorBairro(req: Request, res: Response): Promise<void> {
+  async pontosPorBairro(_req: Request, res: Response): Promise<void> {
     const [linhas] = await pool.execute(`
       SELECT bairro, COUNT(*) AS total
       FROM pontos_coleta

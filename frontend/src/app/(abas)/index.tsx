@@ -1,17 +1,14 @@
 // ============================================================
-// TELA: Home (Inicio) — VERSAO COM DADOS REAIS
+// TELA: Inicio
 // Rota: /(abas)/
 //
-// REGRA DE NEGOCIO: nada de dados ficticios/mockados.
-// Todos os numeros vem de endpoints existentes:
-//   - Total de pontos disponiveis: GET /pontos (count)
-//   - Favoritos salvos:            GET /favoritos (count)
-//   - Meus pontos cadastrados:     GET /pontos filtrado por usuarioId
-//   - Categoria em destaque:       categoria mais frequente
-//                                  computada a partir dos pontos.
+// Todos os numeros saem de dados reais:
+//   - Pontos disponiveis e "meus pontos": lista de GET /pontos
+//   - Favoritos:                          GET /favoritos
+//   - Categoria mais aceita:              a mais frequente entre os pontos
+//   - Perto de voce:                      pontos da cidade do usuario (GPS)
 //
-// Se nao houver pontos no sistema, o bloco "Categoria do mes"
-// e ocultado para nao mostrar info vazia/quebrada.
+// Blocos sem dados (sem pontos, sem cidade identificada) nao aparecem.
 // ============================================================
 
 import {

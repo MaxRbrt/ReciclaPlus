@@ -27,6 +27,9 @@ function listaVariavel(nome: string): string[] {
 export const ambiente = {
   porta: Number(process.env.PORTA) || 3000,
 
+  // Libera as origens padrao do Expo no CORS e o detalhe dos erros nas respostas.
+  emDesenvolvimento: process.env.NODE_ENV === 'development',
+
   db: {
     host: process.env.DB_HOST || 'localhost',
     porta: Number(process.env.DB_PORTA) || 3306,

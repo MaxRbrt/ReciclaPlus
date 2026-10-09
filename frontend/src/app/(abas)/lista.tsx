@@ -1,20 +1,16 @@
 // ============================================================
-// TELA: Lista de Pontos de Coleta - VERSAO REPAGINADA
+// TELA: Lista de Pontos de Coleta
 // Rota: /(abas)/lista
 //
 // ESTRUTURA:
-//   1. Header com LinearGradient verde + titulo + contador
-//   2. Barra de busca elevada (sobrepondo o header)
-//   3. Filtro por categoria (chips horizontais com icone)
-//   4. Indicador de filtro ativo (chip "limpar tudo")
-//   5. Lista (FlatList) de cards refinados:
-//        - Icone + info + badges das categorias do ponto
-//   6. Estados especiais:
-//        - Loading (spinner)
-//        - Erro de rede (mensagem + botao tentar novamente)
-//        - Sem pontos no back
-//        - Sem resultados para busca (mensagem contextual)
-//   7. FAB (botao flutuante) para adicionar ponto novo
+//   1. Header com gradiente, titulo e contador
+//   2. Busca por nome, bairro ou cidade (sobrepoe o header)
+//   3. Filtro por categoria (chips horizontais)
+//   4. Atalho "Limpar filtros" quando ha busca ou categoria ativa
+//   5. Lista de cards: foto, endereco, distancia e categorias do ponto,
+//      do mais perto para o mais longe quando a posicao e conhecida
+//   6. Estados: carregando, erro de rede, sem pontos, sem resultados
+//   7. Botao flutuante para cadastrar ponto
 // ============================================================
 
 import { MaterialCommunityIcons } from "@expo/vector-icons";

@@ -43,7 +43,10 @@ type PontoComCategorias = PontoDB & {
   categorias: CategoriaResumo[];
 };
 
-const COLUNAS_PONTO = `
+// Colunas de qualquer SELECT de ponto (tambem usadas pelos favoritos), para que
+// todas as rotas devolvam o ponto no mesmo formato. Exigem os aliases "p"
+// (pontos_coleta) e "u" (usuarios, dono do ponto).
+export const COLUNAS_PONTO = `
   p.id,
   p.nome,
   p.descricao,
@@ -93,11 +96,7 @@ async function anexarCategorias(pontos: PontoDB[]): Promise<PontoComCategorias[]
   }));
 }
 
-function normalizarCategoriaIds(categoriaIds?: number[]): number[] {
-  return [...new Set((categoriaIds ?? []).map(Number))]
-    .filter((id): id is number => Number.isInteger(id));
-}
-
+// Espera ids ja validados e sem repeticao (ver utilitarios/validarPonto).
 async function inserirCategoriasDoPonto(
   conn: PoolConnection,
   pontoId: number,
@@ -173,7 +172,7 @@ export const PontoModelo = {
   async criar(dados: {
     nome: string; descricao: string; endereco: string; bairro: string; cidade: string;
     latitude: number; longitude: number; fotoUrl: string;
-    horarioFuncionamento: string; usuarioId: number; categoriaIds?: number[];
+    horarioFuncionamento: string; usuarioId: number; categoriaIds: number[];
   }): Promise<{ id: number }> {
     const conn = await pool.getConnection();
 
@@ -191,11 +190,7 @@ export const PontoModelo = {
       ]);
 
       const pontoId = resultado.insertId;
-      await inserirCategoriasDoPonto(
-        conn,
-        pontoId,
-        normalizarCategoriaIds(dados.categoriaIds)
-      );
+      await inserirCategoriasDoPonto(conn, pontoId, dados.categoriaIds);
 
       await conn.commit();
       return { id: pontoId };
@@ -267,11 +262,7 @@ export const PontoModelo = {
       // Quando categoriaIds vem no payload, ele representa a selecao final.
       if (Array.isArray(dados.categoriaIds)) {
         await conn.execute('DELETE FROM ponto_categorias WHERE ponto_id = ?', [id]);
-        await inserirCategoriasDoPonto(
-          conn,
-          id,
-          normalizarCategoriaIds(dados.categoriaIds)
-        );
+        await inserirCategoriasDoPonto(conn, id, dados.categoriaIds);
       }
 
       await conn.commit();

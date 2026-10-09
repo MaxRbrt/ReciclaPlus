@@ -1,7 +1,8 @@
 // ============================================================
 // SERVICO: Autenticacao
-// Funcoes para login, cadastro e logout do usuario.
-// Apos login, salva o token JWT no SecureStore e dados nao sensiveis no AsyncStorage.
+// Login, cadastro, logout e acoes da conta do usuario.
+// O token fica no armazenamento seguro (tokenSeguro) e os dados nao
+// sensiveis do usuario no AsyncStorage.
 // ============================================================
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -13,9 +14,6 @@ import { salvarToken, obterToken, removerToken } from './tokenSeguro';
 const CHAVE_USUARIO = '@reciclaplus:usuario';
 
 // Realiza login e salva token + usuario localmente
-// IMPORTANTE: a rota correta no backend e POST /usuarios/login
-// pois o roteador de usuarios e montado em /usuarios no index.ts.
-// Chamar apenas '/login' resulta em 404 (rota nao registrada).
 export async function entrar(dados: DadosLogin): Promise<RespostaLogin> {
   const resposta = await api.post<RespostaLogin>('/usuarios/login', dados);
   const { token, usuario } = resposta.data;
@@ -40,7 +38,7 @@ export async function atualizarNome(nome: string): Promise<Usuario> {
   return resposta.data;
 }
 
-// Troca a senha; a API confere a senha atual antes de aceitar a nova
+// Troca a senha; a API confere a senha atual antes de aceitar a nova.
 // A troca encerra as sessoes antigas (inclusive a deste aparelho), entao a API
 // devolve um token novo, que substitui o atual.
 export async function alterarSenha(senhaAtual: string, novaSenha: string): Promise<void> {
@@ -73,6 +71,5 @@ export async function recuperarUsuarioLocal(): Promise<Usuario | null> {
 
 // Verifica se ha token salvo (usuario ja logou antes)
 export async function estaAutenticado(): Promise<boolean> {
-  const token = await obterToken();
-  return token !== null;
+  return (await obterToken()) !== null;
 }
