@@ -1,0 +1,1216 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#fbfaf6" />
+    <meta
+      name="description"
+      content="Encontre pontos de coleta, dê um novo destino aos seus recicláveis e ajude a mapear uma cidade mais consciente com o ReciclaPlus."
+    />
+    <meta property="og:title" content="ReciclaPlus — Pequenas atitudes. Novos começos." />
+    <meta
+      property="og:description"
+      content="O próximo passo para reciclar pode estar bem perto de você. Conheça o ReciclaPlus."
+    />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>ReciclaPlus — Pequenas atitudes. Novos começos.</title>
+  </head>
+  <body>
+    <a class="pular-conteudo" href="#conteudo">Pular para o conteúdo</a>
+    <svg class="icones" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <symbol id="icone-folha" viewBox="0 0 24 24">
+          <path d="M20 4C9 2 3 8 6 15c3 6 13 3 14-11Z" />
+          <path d="M4 21 15 10M9 16v-5m0 5h5" />
+        </symbol>
+        <symbol id="icone-seta" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6" /></symbol>
+        <symbol id="icone-seta-diagonal" viewBox="0 0 24 24">
+          <path d="M7 17 17 7M8 7h9v9" />
+        </symbol>
+        <symbol id="icone-local" viewBox="0 0 24 24">
+          <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z" />
+          <circle cx="12" cy="10" r="2.5" />
+        </symbol>
+        <symbol id="icone-local-cheio" viewBox="0 0 24 24">
+          <path
+            d="M12 2a8 8 0 0 0-8 8c0 6 8 12 8 12s8-6 8-12a8 8 0 0 0-8-8Zm0 10.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z"
+          />
+        </symbol>
+        <symbol id="icone-mapa" viewBox="0 0 24 24">
+          <path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Zm6-3v15m6-12v15" />
+        </symbol>
+        <symbol id="icone-casa" viewBox="0 0 24 24">
+          <path d="M3 11 12 3l9 8v10h-6v-6H9v6H3Z" />
+        </symbol>
+        <symbol id="icone-lista" viewBox="0 0 24 24">
+          <path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01" />
+        </symbol>
+        <symbol id="icone-coracao" viewBox="0 0 24 24">
+          <path
+            d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"
+          />
+        </symbol>
+        <symbol id="icone-pessoas" viewBox="0 0 24 24">
+          <circle cx="9" cy="7" r="3" />
+          <path d="M3 21v-3a6 6 0 0 1 12 0v3m1-17a3 3 0 0 1 0 6m3 11v-3a6 6 0 0 0-3-5" />
+        </symbol>
+        <symbol id="icone-conta" viewBox="0 0 24 24">
+          <circle cx="10" cy="8" r="4" />
+          <path d="M3 21a7 7 0 0 1 10-6.3M18 14v2m0 4v2m-4-4h2m4 0h2" />
+        </symbol>
+        <symbol id="icone-mais" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></symbol>
+        <symbol id="icone-mais-circulo" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 8v8M8 12h8" />
+        </symbol>
+        <symbol id="icone-papel" viewBox="0 0 24 24">
+          <path d="M4 5h13v14H6a2 2 0 0 1-2-2Zm13 4h3v8a2 2 0 0 1-2 2h-1M7 9h7M7 13h7M7 16h4" />
+        </symbol>
+        <symbol id="icone-caixa" viewBox="0 0 24 24">
+          <path d="m3 8 9-5 9 5v9l-9 5-9-5Zm0 0 9 5 9-5M12 13v9M7.5 5.5l9 5" />
+        </symbol>
+        <symbol id="icone-garrafa" viewBox="0 0 24 24">
+          <path d="M9 2h6v5l3 4v9a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-9l3-4Zm0 3h6M6 13h12M6 17h12" />
+        </symbol>
+        <symbol id="icone-pote" viewBox="0 0 24 24">
+          <path d="M5 8h14l-1.5 12a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2ZM4 5h16v3H4Zm5 7v6m6-6v6" />
+        </symbol>
+        <symbol id="icone-vidro" viewBox="0 0 24 24">
+          <path d="M9 2h6v7l3 5v7H6v-7l3-5Zm0 4h6M6 15h12" />
+        </symbol>
+        <symbol id="icone-metal" viewBox="0 0 24 24">
+          <ellipse cx="12" cy="5" rx="7" ry="3" />
+          <path d="M5 5v14c0 4 14 4 14 0V5M8 10v7m4-7v7m4-7v7" />
+        </symbol>
+        <symbol id="icone-bateria" viewBox="0 0 24 24">
+          <path d="M9 3V1h6v2M7 3h10v19H7Zm5 4v5m-2-2h4m-4 7h4" />
+        </symbol>
+        <symbol id="icone-eletronico" viewBox="0 0 24 24">
+          <rect x="3" y="4" width="18" height="12" rx="2" />
+          <path d="M2 20h20" />
+        </symbol>
+        <symbol id="icone-oleo" viewBox="0 0 24 24">
+          <path d="M12 2S5 10 5 15a7 7 0 0 0 14 0C19 10 12 2 12 2Zm-3 13a3 3 0 0 0 3 3" />
+        </symbol>
+        <symbol id="icone-roupa" viewBox="0 0 24 24">
+          <path d="m8 3-6 4 3 5 3-2v11h8V10l3 2 3-5-6-4a4 4 0 0 1-8 0Z" />
+        </symbol>
+        <symbol id="icone-reciclar" viewBox="0 0 24 24">
+          <path d="m9 3 3-1 4 7m0-5v5h-5M21 13l1 3-4 7m4-5-4 5-3-5M9 21H4l-3-5 4-7m-4 2 4-2 2 5" />
+        </symbol>
+        <symbol id="icone-busca" viewBox="0 0 24 24">
+          <circle cx="10.5" cy="10.5" r="6.5" />
+          <path d="m16 16 5 5" />
+        </symbol>
+        <symbol id="icone-relogio" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 7v5l3 2" />
+        </symbol>
+        <symbol id="icone-mira" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="7" />
+          <path d="M12 2v4m0 12v4M2 12h4m12 0h4" />
+        </symbol>
+        <symbol id="icone-toque" viewBox="0 0 24 24">
+          <path
+            d="M9 11V5a2 2 0 1 1 4 0v5m0-1a2 2 0 1 1 4 0v2m0-.5a2 2 0 1 1 4 0V16a6 6 0 0 1-6 6h-2a6 6 0 0 1-4.8-2.4L5 16a1.8 1.8 0 0 1 2.7-2.3L9 15"
+          />
+        </symbol>
+        <symbol id="icone-voltar" viewBox="0 0 24 24">
+          <path d="M3 12a9 9 0 1 0 3-6.7M3 3v6h6" />
+        </symbol>
+        <symbol id="icone-seta-esquerda" viewBox="0 0 24 24">
+          <path d="M20 12H4m6-6-6 6 6 6" />
+        </symbol>
+        <symbol id="icone-compartilhar" viewBox="0 0 24 24">
+          <circle cx="18" cy="5" r="3" />
+          <circle cx="6" cy="12" r="3" />
+          <circle cx="18" cy="19" r="3" />
+          <path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" />
+        </symbol>
+        <symbol id="icone-rota" viewBox="0 0 24 24">
+          <path d="m12 2 10 10-10 10L2 12Z" />
+          <path d="M9 14v-3h5m-2-2 2 2-2 2" />
+        </symbol>
+        <symbol id="icone-marca" viewBox="0 0 40 40">
+          <path d="M20 7a13 13 0 0 1 11.3 6.6" />
+          <path d="m32.6 9.6-1.3 4-4-1" />
+          <path d="M33 20a13 13 0 0 1-6.6 11.3" />
+          <path d="m30.4 32.6-4-1.3 1-4" />
+          <path d="M20 33a13 13 0 0 1-11.3-6.6" />
+          <path d="m7.4 30.4 1.3-4 4 1" />
+          <path d="M26 15c-8-1.5-13 3-11 9.5 1.6 4.8 9 2.2 11-9.5Z" />
+          <path d="m13.5 27 7-7" />
+        </symbol>
+      </defs>
+    </svg>
+
+    <header class="cabecalho">
+      <div class="cabecalho-barra largura">
+        <a class="marca" href="#inicio" aria-label="ReciclaPlus, início"
+          ><span class="marca-simbolo"
+            ><svg viewBox="0 0 40 40"><use href="#icone-marca" /></svg></span
+          ><span class="marca-nome">Recicla<b>Plus</b></span></a
+        >
+        <button
+          class="menu-botao"
+          type="button"
+          aria-expanded="false"
+          aria-controls="navegacao"
+          aria-label="Abrir menu"
+        >
+          <span></span><span></span>
+        </button>
+        <nav class="navegacao" id="navegacao" aria-label="Navegação principal">
+          <a href="#como-funciona">Como funciona</a>
+          <a href="#por-dentro">O app</a>
+          <a href="#materiais">Materiais</a>
+          <a href="#comunidade">Comunidade</a>
+          <a class="botao botao-pequeno" href="#conheca">Conheça o app</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="conteudo">
+      <section class="abertura" id="inicio" aria-labelledby="titulo-principal">
+        <div class="abertura-palco">
+          <svg
+            class="formas-tema"
+            viewBox="0 0 1440 900"
+            preserveAspectRatio="xMidYMid slice"
+            aria-hidden="true"
+          >
+            <circle cx="1320" cy="120" r="260" />
+            <circle cx="80" cy="860" r="200" />
+            <g transform="translate(1260 760) rotate(-40) scale(2.4)">
+              <path d="M-80 0C-40-58 40-58 80 0 40 58-40 58-80 0Z" />
+            </g>
+            <g transform="translate(190 170) rotate(24) scale(1.3)">
+              <path d="M-80 0C-40-58 40-58 80 0 40 58-40 58-80 0Z" />
+            </g>
+          </svg>
+          <div class="abertura-foto" aria-hidden="true">
+            <img
+              src="/imagens/abertura-floresta.webp"
+              alt=""
+              width="1672"
+              height="941"
+              fetchpriority="high"
+            />
+          </div>
+          <div class="cenario" aria-hidden="true"></div>
+          <div class="abertura-texto">
+            <p class="abertura-marca entrada">ReciclaPlus</p>
+            <h1 id="titulo-principal" class="abertura-titulo">
+              <span class="linha">Pequenas atitudes.</span>
+              <span class="linha degrade">Novos começos.</span>
+            </h1>
+            <p class="abertura-descricao entrada">
+              Encontre pontos de coleta perto de você e dê um novo destino ao que você separa.
+            </p>
+            <div class="abertura-acoes entrada">
+              <a class="botao botao-verde magnetico" href="#como-funciona"
+                >Descubra como funciona</a
+              >
+              <a class="link-seta" href="#materiais"
+                >O que posso reciclar <span aria-hidden="true">›</span></a
+              >
+            </div>
+          </div>
+          <div class="palco-maquete" aria-hidden="true"></div>
+          <div class="passeio-camada">
+            <h2 class="passeio-frase" aria-live="polite">Sua cidade, em pontos de coleta.</h2>
+            <aside class="parada-cartao" aria-live="polite">
+              <span class="parada-icone"
+                ><svg><use href="#icone-papel" /></svg
+              ></span>
+              <span class="parada-etiqueta">Lixeira azul · Papel</span>
+              <strong class="parada-titulo">Novas histórias começam aqui.</strong>
+              <p class="parada-texto">Separe papéis e caixas limpos e secos.</p>
+              <span class="parada-horario"
+                ><svg><use href="#icone-relogio" /></svg>Seg. a sáb. · 8h às 17h</span
+              >
+            </aside>
+          </div>
+          <div class="abertura-legenda">
+            <p class="frase">
+              <strong>Um mapa feito por pessoas.</strong> Cada pino é um ponto de coleta cadastrado
+              pela comunidade.
+            </p>
+            <ul class="legenda-mapa" aria-label="Cores das categorias">
+              <li style="--cor: var(--rec-papel)">Papel</li>
+              <li style="--cor: var(--rec-plastico)">Plástico</li>
+              <li style="--cor: var(--rec-vidro)">Vidro</li>
+              <li style="--cor: var(--rec-metal)">Metal</li>
+              <li style="--cor: var(--rec-baterias)">Pilhas</li>
+              <li style="--cor: var(--rec-eletronicos)">Eletrônicos</li>
+              <li style="--cor: var(--rec-oleo)">Óleo</li>
+              <li style="--cor: var(--rec-roupas)">Roupas</li>
+              <li style="--cor: var(--rec-outros)">Outros</li>
+            </ul>
+            <span class="dica-maquete">Passe o cursor ou toque nos pinos</span>
+          </div>
+          <p class="aviso-pino" role="status" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <section class="metodo" id="como-funciona" aria-labelledby="titulo-metodo">
+        <div class="metodo-palco">
+          <div class="metodo-conteudo largura">
+            <div class="metodo-texto">
+              <h2 id="titulo-metodo" class="titulo-revelar">
+                Reciclar pode ser <span class="degrade">mais simples.</span>
+              </h2>
+              <div class="passos" role="group" aria-label="Etapas do ReciclaPlus">
+                <button
+                  class="passo selecionado"
+                  type="button"
+                  data-tela="mapa"
+                  aria-pressed="true"
+                  aria-controls="previa-mapa"
+                >
+                  <strong>Encontre seu ponto.</strong>
+                  <span>Explore o mapa, filtre por material e veja o que está perto de você.</span>
+                </button>
+                <button
+                  class="passo"
+                  type="button"
+                  data-tela="detalhe"
+                  aria-pressed="false"
+                  aria-controls="previa-detalhe"
+                >
+                  <strong>Separe. Leve. Renove.</strong>
+                  <span
+                    >Confira os materiais aceitos, o horário e abra a rota no seu app de
+                    mapas.</span
+                  >
+                </button>
+                <button
+                  class="passo"
+                  type="button"
+                  data-tela="comunidade"
+                  aria-pressed="false"
+                  aria-controls="previa-comunidade"
+                >
+                  <strong>Multiplique a mudança.</strong>
+                  <span>Cadastre pontos com foto e localização. Cada um ajuda outra pessoa.</span>
+                </button>
+              </div>
+            </div>
+            <div class="metodo-aparelho">
+              <div class="aparelho">
+                <div class="aparelho-tela">
+                  <div class="tela-escala">
+                    <div class="app-status" aria-hidden="true">
+                      <span>9:41</span><span class="app-ilha"></span><span>●●● ▮</span>
+                    </div>
+
+                    <div
+                      class="tela-aplicativo tela-inicio"
+                      id="previa-inicio"
+                      role="region"
+                      aria-label="Prévia da tela Início"
+                      hidden
+                    >
+                      <div class="app-destaque">
+                        <svg
+                          class="app-formas"
+                          viewBox="0 0 390 320"
+                          preserveAspectRatio="xMaxYMin slice"
+                          aria-hidden="true"
+                        >
+                          <circle cx="352" cy="34" r="128" fill="#2E7D32" opacity=".9" />
+                          <circle cx="20" cy="300" r="96" fill="#43A047" opacity=".55" />
+                          <g transform="translate(352 214) rotate(-40) scale(1.1)">
+                            <path
+                              d="M-80 0C-40-58 40-58 80 0 40 58-40 58-80 0Z"
+                              fill="#43A047"
+                              opacity=".8"
+                            />
+                            <path
+                              d="M-66-2C-20-8 20-8 66-2v4C20 8-20 8-66 2Z"
+                              fill="#14482A"
+                              opacity=".22"
+                            />
+                          </g>
+                          <g transform="translate(372 286) rotate(-62) scale(.6)">
+                            <path
+                              d="M-80 0C-40-58 40-58 80 0 40 58-40 58-80 0Z"
+                              fill="#CDEB6B"
+                              opacity=".95"
+                            />
+                            <path
+                              d="M-66-2C-20-8 20-8 66-2v4C20 8-20 8-66 2Z"
+                              fill="#14482A"
+                              opacity=".22"
+                            />
+                          </g>
+                          <g transform="translate(268 40) rotate(24) scale(.48)">
+                            <path
+                              d="M-80 0C-40-58 40-58 80 0 40 58-40 58-80 0Z"
+                              fill="#66BB6A"
+                              opacity=".55"
+                            />
+                            <path
+                              d="M-66-2C-20-8 20-8 66-2v4C20 8-20 8-66 2Z"
+                              fill="#14482A"
+                              opacity=".22"
+                            />
+                          </g>
+                          <circle cx="214" cy="22" r="7" fill="#CDEB6B" opacity=".9" />
+                        </svg>
+                        <div class="app-destaque-topo">
+                          <span>Olá, Marina</span
+                          ><span class="app-botao-vidro"
+                            ><svg><use href="#icone-conta" /></svg
+                          ></span>
+                        </div>
+                        <h3 class="app-display">Pequenos atos.<br />Grandes mudanças.</h3>
+                        <p class="app-subfrase">Encontre pontos de coleta perto de você.</p>
+                      </div>
+                      <div class="app-visao-geral">
+                        <div class="app-numero app-tom-escuro">
+                          <strong>12</strong><span>pontos disponíveis</span>
+                        </div>
+                        <div class="app-numero app-tom-lima">
+                          <strong>3</strong><span>favoritos</span>
+                        </div>
+                        <div class="app-numero app-tom-claro">
+                          <strong>2</strong><span>meus pontos</span>
+                        </div>
+                      </div>
+                      <div class="app-secao">
+                        <h4 class="app-secao-titulo">Ações rápidas</h4>
+                        <div class="app-atalhos">
+                          <span class="app-atalho app-tom-escuro"
+                            ><svg><use href="#icone-mapa" /></svg>Ver Mapa</span
+                          ><span class="app-atalho app-tom-claro"
+                            ><svg><use href="#icone-lista" /></svg>Ver Pontos</span
+                          ><span class="app-atalho app-tom-lima"
+                            ><svg><use href="#icone-mais-circulo" /></svg>Novo Ponto</span
+                          >
+                        </div>
+                      </div>
+                      <div class="app-secao">
+                        <div class="app-secao-cabeca">
+                          <h4 class="app-secao-titulo">Categoria mais aceita</h4>
+                          <span>Pelos pontos do app</span>
+                        </div>
+                        <div class="app-categoria">
+                          <span class="app-categoria-icone"
+                            ><svg><use href="#icone-papel" /></svg
+                          ></span>
+                          <div>
+                            <small>Em destaque</small><strong>Papel</strong
+                            ><span
+                              >Categoria com mais pontos de coleta cadastrados na sua região.</span
+                            >
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      class="tela-aplicativo tela-mapa"
+                      id="previa-mapa"
+                      role="region"
+                      aria-label="Prévia da tela Mapa"
+                    >
+                      <svg
+                        class="app-mapa-fundo"
+                        viewBox="0 0 390 800"
+                        preserveAspectRatio="xMidYMid slice"
+                        aria-hidden="true"
+                      >
+                        <rect width="390" height="800" fill="#EEF2E6" />
+                        <path
+                          d="M250-20c-60 120 70 170 30 300s-40 220 80 540"
+                          fill="none"
+                          stroke="#BFDCE3"
+                          stroke-width="42"
+                        />
+                        <g fill="#DDE6D2">
+                          <path
+                            d="m20 120 110-20 30 90-120 26Zm0 170 110-26 26 96-130 24Zm170-200 60-16 24 96-60 8Zm-10 180 64-20 8 110-56 16ZM40 520l120-26 24 110H30Zm190-30 60-14 50 110-96 16ZM310 70l70-14 10 100-60 12Z"
+                          />
+                        </g>
+                        <rect x="300" y="420" width="90" height="120" rx="14" fill="#CFE2C3" />
+                        <path
+                          d="M-10 80 400 10M-10 260 400 180M-10 460l410-80M-10 660l410-80M140-10l90 820M30-10 0 810M310-10l70 820"
+                          stroke="#FFFFFF"
+                          stroke-width="16"
+                          fill="none"
+                        />
+                        <g fill="#8A9A85" font-family="sans-serif" font-size="11">
+                          <text x="40" y="160" transform="rotate(-10 40 160)">
+                            Jardim das Flores
+                          </text>
+                          <text x="215" y="330">Parque Verde</text>
+                          <text x="50" y="600">Centro</text>
+                          <text x="190" y="60">Vila Nova</text>
+                        </g>
+                      </svg>
+                      <span
+                        class="app-pino"
+                        data-categoria="papel"
+                        style="--cor: var(--cat-papel); left: 22%; top: 34%"
+                        ><svg><use href="#icone-local-cheio" /></svg></span
+                      ><span
+                        class="app-pino"
+                        data-categoria="plastico"
+                        style="--cor: var(--cat-plastico); left: 58%; top: 26%"
+                        ><svg><use href="#icone-local-cheio" /></svg></span
+                      ><span
+                        class="app-pino"
+                        data-categoria="vidro"
+                        style="--cor: var(--cat-vidro); left: 70%; top: 52%"
+                        ><svg><use href="#icone-local-cheio" /></svg></span
+                      ><span
+                        class="app-pino"
+                        data-categoria="papel"
+                        style="--cor: var(--cat-papel); left: 34%; top: 62%"
+                        ><svg><use href="#icone-local-cheio" /></svg></span
+                      ><span
+                        class="app-pino"
+                        data-categoria="plastico"
+                        style="--cor: var(--cat-plastico); left: 16%; top: 76%"
+                        ><svg><use href="#icone-local-cheio" /></svg></span
+                      ><span
+                        class="app-pino"
+                        data-categoria="vidro"
+                        style="--cor: var(--cat-vidro); left: 46%; top: 44%"
+                        ><svg><use href="#icone-local-cheio" /></svg
+                      ></span>
+                      <div class="app-balao">
+                        <strong>Ecoponto Jardim Verde</strong><span>Jardim das Flores</span
+                        ><small
+                          ><svg><use href="#icone-relogio" /></svg>Seg. a sáb. · 8h às 17h</small
+                        >
+                      </div>
+                      <div class="app-chips" role="group" aria-label="Filtrar mapa demonstrativo">
+                        <button class="ativo" type="button" data-filtro="todos" aria-pressed="true">
+                          Todos</button
+                        ><button
+                          type="button"
+                          data-filtro="papel"
+                          aria-pressed="false"
+                          style="--cor: var(--cat-papel)"
+                        >
+                          <svg><use href="#icone-papel" /></svg>Papel</button
+                        ><button
+                          type="button"
+                          data-filtro="plastico"
+                          aria-pressed="false"
+                          style="--cor: var(--cat-plastico)"
+                        >
+                          <svg><use href="#icone-garrafa" /></svg>Plástico</button
+                        ><button
+                          type="button"
+                          data-filtro="vidro"
+                          aria-pressed="false"
+                          style="--cor: var(--cat-vidro)"
+                        >
+                          <svg><use href="#icone-vidro" /></svg>Vidro
+                        </button>
+                      </div>
+                      <span class="app-contador"
+                        ><svg><use href="#icone-local-cheio" /></svg
+                        ><b id="mapa-total">6 pontos</b></span
+                      >
+                      <div class="app-faixa">
+                        <span class="app-dica"
+                          ><svg><use href="#icone-toque" /></svg>Segure no mapa para cadastrar um
+                          novo ponto</span
+                        ><span class="app-gps"
+                          ><svg><use href="#icone-mira" /></svg
+                        ></span>
+                      </div>
+                      <span class="app-flutuante"
+                        ><svg><use href="#icone-mais" /></svg>Novo ponto</span
+                      >
+                    </div>
+
+                    <div
+                      class="tela-aplicativo tela-comunidade"
+                      id="previa-comunidade"
+                      role="region"
+                      aria-label="Prévia da tela Comunidade"
+                      hidden
+                    >
+                      <div class="app-cabecalho">
+                        <svg
+                          class="app-formas"
+                          viewBox="0 0 390 320"
+                          preserveAspectRatio="xMaxYMax slice"
+                          aria-hidden="true"
+                        >
+                          <circle cx="372" cy="118" r="92" fill="#2E7D32" opacity=".9" />
+                          <g transform="translate(318 214) rotate(-34) scale(.78)">
+                            <path
+                              d="M-80 0C-40-58 40-58 80 0 40 58-40 58-80 0Z"
+                              fill="#43A047"
+                              opacity=".75"
+                            />
+                            <path
+                              d="M-66-2C-20-8 20-8 66-2v4C20 8-20 8-66 2Z"
+                              fill="#14482A"
+                              opacity=".22"
+                            />
+                          </g>
+                          <g transform="translate(392 196) rotate(-64) scale(.4)">
+                            <path
+                              d="M-80 0C-40-58 40-58 80 0 40 58-40 58-80 0Z"
+                              fill="#CDEB6B"
+                              opacity=".9"
+                            />
+                          </g>
+                          <circle cx="262" cy="108" r="5" fill="#CDEB6B" opacity=".9" />
+                        </svg>
+                        <h3 class="app-titulo">Comunidade</h3>
+                        <p class="app-subtitulo">
+                          Veja onde já existem pontos de coleta e quem os cadastrou
+                        </p>
+                        <div class="app-busca">
+                          <svg><use href="#icone-busca" /></svg>Buscar por cidade...
+                        </div>
+                      </div>
+                      <div class="app-cidades">
+                        <span class="ativo">Sua cidade · 12</span><span>Vila Verde · 8</span
+                        ><span>Centro · 5</span>
+                      </div>
+                      <div class="app-alternador">
+                        <span class="ativo"
+                          ><svg><use href="#icone-pessoas" /></svg>Pessoas</span
+                        ><span
+                          ><svg><use href="#icone-local" /></svg>Pontos</span
+                        >
+                      </div>
+                      <div class="app-lista">
+                        <div class="app-pessoa">
+                          <span class="app-avatar">MA</span>
+                          <div><strong>Marina Alves</strong><span>4 pontos cadastrados</span></div>
+                          <svg><use href="#icone-seta" /></svg>
+                        </div>
+                        <div class="app-pessoa">
+                          <span class="app-avatar">JL</span>
+                          <div><strong>João Lima</strong><span>3 pontos cadastrados</span></div>
+                          <svg><use href="#icone-seta" /></svg>
+                        </div>
+                        <div class="app-pessoa">
+                          <span class="app-avatar">AC</span>
+                          <div><strong>Ana Costa</strong><span>5 pontos cadastrados</span></div>
+                          <svg><use href="#icone-seta" /></svg>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      class="tela-aplicativo tela-detalhe"
+                      id="previa-detalhe"
+                      role="region"
+                      aria-label="Prévia da tela Detalhe do ponto"
+                      hidden
+                    >
+                      <div class="app-foto">
+                        <img
+                          src="/imagens/coleta.webp"
+                          alt=""
+                          width="390"
+                          height="300"
+                          loading="lazy"
+                        />
+                        <div class="app-foto-acoes">
+                          <span class="app-botao-redondo"
+                            ><svg><use href="#icone-seta-esquerda" /></svg></span
+                          ><span class="app-botao-redondo app-favorito"
+                            ><svg><use href="#icone-coracao" /></svg
+                          ></span>
+                        </div>
+                      </div>
+                      <div class="app-ficha">
+                        <small class="app-rotulo">Jardim das Flores</small>
+                        <h3 class="app-display">Ecoponto Jardim Verde</h3>
+                        <p class="app-endereco">
+                          <svg><use href="#icone-local" /></svg>Jardim das Flores · Sua cidade
+                        </p>
+                        <div class="app-acoes">
+                          <span class="app-botao-suave"
+                            ><svg><use href="#icone-rota" /></svg>Como chegar</span
+                          ><span class="app-botao-suave"
+                            ><svg><use href="#icone-compartilhar" /></svg>Compartilhar</span
+                          >
+                        </div>
+                        <h4 class="app-secao-titulo">Materiais aceitos</h4>
+                        <div class="app-etiquetas">
+                          <span style="--cor: var(--cat-papel)">Papel</span
+                          ><span style="--cor: var(--cat-plastico)">Plástico</span
+                          ><span style="--cor: var(--cat-vidro)">Vidro</span>
+                        </div>
+                        <h4 class="app-secao-titulo">Informações</h4>
+                        <div class="app-info">
+                          <svg><use href="#icone-relogio" /></svg>
+                          <div>
+                            <small>Horário de funcionamento</small
+                            ><span>Seg. a sáb. · 8h às 17h</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="app-abas" aria-hidden="true">
+                      <span data-aba="inicio" class="ativa"
+                        ><i
+                          ><svg><use href="#icone-casa" /></svg></i
+                        >Início</span
+                      ><span data-aba="mapa"
+                        ><i
+                          ><svg><use href="#icone-mapa" /></svg></i
+                        >Mapa</span
+                      ><span
+                        ><i
+                          ><svg><use href="#icone-local" /></svg></i
+                        >Pontos</span
+                      ><span data-aba="comunidade"
+                        ><i
+                          ><svg><use href="#icone-pessoas" /></svg></i
+                        >Comunidade</span
+                      ><span
+                        ><i
+                          ><svg><use href="#icone-coracao" /></svg></i
+                        >Favoritos</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p class="nota-aparelho">Telas do app. Pessoas e dados ilustrativos.</p>
+            </div>
+          </div>
+          <div class="metodo-progresso" aria-hidden="true"><span></span></div>
+        </div>
+      </section>
+
+      <section class="tour" id="por-dentro" aria-labelledby="titulo-tour">
+        <div class="tour-palco">
+          <svg
+            class="formas-tema"
+            viewBox="0 0 1440 900"
+            preserveAspectRatio="xMidYMid slice"
+            aria-hidden="true"
+          >
+            <circle cx="1300" cy="140" r="240" />
+            <circle cx="120" cy="820" r="180" />
+            <g transform="translate(1180 780) rotate(-38) scale(2.2)">
+              <path d="M-80 0C-40-58 40-58 80 0 40 58-40 58-80 0Z" />
+            </g>
+          </svg>
+          <div class="tour-cabeca largura">
+            <h2 id="titulo-tour">Explore o app.</h2>
+            <p class="tour-contador" aria-hidden="true"><b>01</b> / 04</p>
+          </div>
+          <ol class="tour-telas">
+            <li class="tour-tela" data-indice="0">
+              <div class="tour-texto">
+                <h3>Início.</h3>
+                <p>
+                  Tudo o que importa num olhar: seus números, atalhos e a categoria mais aceita.
+                </p>
+              </div>
+              <div class="tour-aparelho">
+                <img
+                  src="/imagens/app-inicio.webp"
+                  alt="Tela Início do ReciclaPlus com pontos disponíveis, favoritos e atalhos"
+                  loading="lazy"
+                  width="1170"
+                  height="2508"
+                />
+                <ul class="destaques-tela">
+                  <li class="destaque-tela" data-lado="direita" style="--x: 22; --y: 40">
+                    <span
+                      ><strong>12 pontos disponíveis</strong>Números da sua conta, direto do
+                      mapa.</span
+                    >
+                  </li>
+                  <li class="destaque-tela" data-lado="direita" style="--x: 82; --y: 60">
+                    <span><strong>Ações rápidas</strong>Mapa, lista e novo ponto em um toque.</span>
+                  </li>
+                  <li class="destaque-tela" data-lado="direita" style="--x: 24; --y: 80">
+                    <span
+                      ><strong>Categoria mais aceita</strong>O material com mais pontos na
+                      região.</span
+                    >
+                  </li>
+                </ul>
+              </div>
+            </li>
+            <li class="tour-tela" data-indice="1">
+              <div class="tour-texto">
+                <h3>Mapa.</h3>
+                <p>Pinos coloridos por material e filtro em um toque.</p>
+              </div>
+              <div class="tour-aparelho">
+                <img
+                  src="/imagens/app-mapa.webp"
+                  alt="Tela Mapa do ReciclaPlus com pinos coloridos e filtros de material"
+                  loading="lazy"
+                  width="1170"
+                  height="2508"
+                />
+                <ul class="destaques-tela">
+                  <li class="destaque-tela" data-lado="direita" style="--x: 70; --y: 10">
+                    <span
+                      ><strong>Filtro por material</strong>Mostre só papel, plástico ou vidro.</span
+                    >
+                  </li>
+                  <li class="destaque-tela" data-lado="direita" style="--x: 22; --y: 33">
+                    <span><strong>Pinos por categoria</strong>Cada cor, um tipo de material.</span>
+                  </li>
+                  <li class="destaque-tela" data-lado="direita" style="--x: 60; --y: 77">
+                    <span
+                      ><strong>Segure para cadastrar</strong>Um toque longo cria um ponto
+                      novo.</span
+                    >
+                  </li>
+                </ul>
+              </div>
+            </li>
+            <li class="tour-tela" data-indice="2">
+              <div class="tour-texto">
+                <h3>Detalhe do ponto.</h3>
+                <p>Foto, materiais aceitos, horário e o caminho até lá.</p>
+              </div>
+              <div class="tour-aparelho">
+                <img
+                  src="/imagens/app-detalhe.webp"
+                  alt="Tela de detalhe de um ponto de coleta com materiais aceitos"
+                  loading="lazy"
+                  width="1170"
+                  height="2508"
+                />
+                <ul class="destaques-tela">
+                  <li class="destaque-tela" data-lado="direita" style="--x: 30; --y: 16">
+                    <span><strong>Foto do local</strong>Reconheça o ponto quando chegar.</span>
+                  </li>
+                  <li class="destaque-tela" data-lado="direita" style="--x: 76; --y: 52">
+                    <span><strong>Como chegar</strong>Abre a rota no seu app de mapas.</span>
+                  </li>
+                  <li class="destaque-tela" data-lado="direita" style="--x: 26; --y: 64">
+                    <span><strong>Materiais aceitos</strong>Leve só o que o ponto recebe.</span>
+                  </li>
+                </ul>
+              </div>
+            </li>
+            <li class="tour-tela" data-indice="3">
+              <div class="tour-texto">
+                <h3>Comunidade.</h3>
+                <p>Quem já cadastrou pontos na sua cidade.</p>
+              </div>
+              <div class="tour-aparelho">
+                <img
+                  src="/imagens/app-comunidade.webp"
+                  alt="Tela Comunidade do ReciclaPlus com pessoas e cidades"
+                  loading="lazy"
+                  width="1170"
+                  height="2508"
+                />
+                <ul class="destaques-tela">
+                  <li class="destaque-tela" data-lado="direita" style="--x: 78; --y: 23">
+                    <span><strong>Busca por cidade</strong>Veja o mapa de outros lugares.</span>
+                  </li>
+                  <li class="destaque-tela" data-lado="direita" style="--x: 24; --y: 39">
+                    <span
+                      ><strong>Pessoas e pontos</strong>Alterne entre quem contribui e onde.</span
+                    >
+                  </li>
+                  <li class="destaque-tela" data-lado="direita" style="--x: 80; --y: 58">
+                    <span
+                      ><strong>Quem faz a diferença</strong>Cada nome, um mapa mais completo.</span
+                    >
+                  </li>
+                </ul>
+              </div>
+            </li>
+          </ol>
+          <div class="tour-progresso" aria-hidden="true"><span></span></div>
+        </div>
+      </section>
+
+      <section class="numeros" aria-label="ReciclaPlus em números">
+        <div class="largura numeros-grade">
+          <div class="numero revelar">
+            <strong class="contador degrade" data-valor="9">9</strong
+            ><span>categorias de material</span>
+          </div>
+          <div class="numero revelar">
+            <strong class="contador degrade" data-valor="5">5</strong
+            ><span>abas no aplicativo</span>
+          </div>
+          <div class="numero revelar">
+            <strong class="degrade">1</strong><span>mapa feito por pessoas</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="materiais secao" id="materiais" aria-labelledby="titulo-materiais">
+        <div class="largura">
+          <div class="cabecalho-secao">
+            <h2 id="titulo-materiais" class="titulo-revelar">
+              Não é o fim. <span class="degrade">É um novo destino.</span>
+            </h2>
+            <p class="frase revelar">
+              <strong>Do papel ao eletrônico,</strong> o primeiro passo é saber onde levar e como
+              preparar.
+            </p>
+          </div>
+          <figure class="mascara-circulo">
+            <img
+              src="/imagens/materiais-estudio.webp"
+              alt="Vidro, lata, papelão, garrafa PET e jornal separados entre folhas verdes"
+              loading="lazy"
+              width="1555"
+              height="1011"
+            />
+          </figure>
+          <div class="material-painel" aria-live="polite" aria-atomic="true">
+            <div class="amostra" data-amostra="papel" aria-hidden="true">
+              <svg id="material-icone"><use href="#icone-papel" /></svg>
+            </div>
+            <div class="material-ficha">
+              <span class="material-etiqueta" id="material-etiqueta">Papel e papelão</span>
+              <h3 id="material-titulo">Novas histórias começam aqui.</h3>
+              <p id="material-orientacao">
+                Separe papéis e caixas de papelão limpos e secos. Dobre as caixas para ocupar menos
+                espaço.
+              </p>
+              <p class="material-dados">
+                <i class="material-cor"></i>Cor da coleta <span id="material-hex">#1E5BD6</span> ·
+                Confira o que o ponto aceita
+              </p>
+            </div>
+          </div>
+          <div class="materiais-seletor" role="group" aria-label="Escolha um material">
+            <button
+              class="material selecionado"
+              type="button"
+              data-material="papel"
+              aria-pressed="true"
+              style="--cor: var(--rec-papel)"
+            >
+              Papel
+            </button>
+            <button
+              class="material"
+              type="button"
+              data-material="plastico"
+              aria-pressed="false"
+              style="--cor: var(--rec-plastico)"
+            >
+              Plástico
+            </button>
+            <button
+              class="material"
+              type="button"
+              data-material="vidro"
+              aria-pressed="false"
+              style="--cor: var(--rec-vidro)"
+            >
+              Vidro
+            </button>
+            <button
+              class="material"
+              type="button"
+              data-material="metal"
+              aria-pressed="false"
+              style="--cor: var(--rec-metal)"
+            >
+              Metal
+            </button>
+            <button
+              class="material"
+              type="button"
+              data-material="baterias"
+              aria-pressed="false"
+              style="--cor: var(--rec-baterias)"
+            >
+              Pilhas
+            </button>
+            <button
+              class="material"
+              type="button"
+              data-material="eletronicos"
+              aria-pressed="false"
+              style="--cor: var(--rec-eletronicos)"
+            >
+              Eletrônicos
+            </button>
+            <button
+              class="material"
+              type="button"
+              data-material="oleo"
+              aria-pressed="false"
+              style="--cor: var(--rec-oleo)"
+            >
+              Óleo
+            </button>
+            <button
+              class="material"
+              type="button"
+              data-material="roupas"
+              aria-pressed="false"
+              style="--cor: var(--rec-roupas)"
+            >
+              Roupas
+            </button>
+            <button
+              class="material"
+              type="button"
+              data-material="outros"
+              aria-pressed="false"
+              style="--cor: var(--rec-outros)"
+            >
+              Outros
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="separar" id="separar" aria-labelledby="titulo-separar">
+        <div class="separar-palco">
+          <div class="separar-cabeca largura">
+            <h2 id="titulo-separar">Cada coisa <span class="degrade">no seu lugar.</span></h2>
+            <p class="frase">
+              <strong>Role a página</strong> e veja cada item encontrar a lixeira certa.
+            </p>
+          </div>
+          <div class="separar-cena largura">
+            <ul class="separar-itens" aria-label="Itens e suas lixeiras">
+              <li class="separar-item" data-lixeira="papel">
+                <span class="separar-item-icone"
+                  ><svg><use href="#icone-papel" /></svg></span
+                >Jornal
+              </li>
+              <li class="separar-item" data-lixeira="plastico">
+                <span class="separar-item-icone"
+                  ><svg><use href="#icone-garrafa" /></svg></span
+                >Garrafa PET
+              </li>
+              <li class="separar-item" data-lixeira="vidro">
+                <span class="separar-item-icone"
+                  ><svg><use href="#icone-vidro" /></svg></span
+                >Pote de vidro
+              </li>
+              <li class="separar-item" data-lixeira="metal">
+                <span class="separar-item-icone"
+                  ><svg><use href="#icone-metal" /></svg></span
+                >Lata
+              </li>
+              <li class="separar-item" data-lixeira="papel">
+                <span class="separar-item-icone"
+                  ><svg><use href="#icone-caixa" /></svg></span
+                >Caixa de papelão
+              </li>
+              <li class="separar-item" data-lixeira="plastico">
+                <span class="separar-item-icone"
+                  ><svg><use href="#icone-pote" /></svg></span
+                >Pote de plástico
+              </li>
+            </ul>
+            <div class="separar-lixeiras" aria-hidden="true">
+              <div class="lixeira-cena" data-lixeira="papel" style="--cor: var(--rec-papel)">
+                <span class="lixeira-cena-tampa"></span
+                ><span class="lixeira-cena-corpo"
+                  ><svg><use href="#icone-reciclar" /></svg><b>Papel</b
+                  ><small class="lixeira-contagem">0</small></span
+                >
+              </div>
+              <div class="lixeira-cena" data-lixeira="plastico" style="--cor: var(--rec-plastico)">
+                <span class="lixeira-cena-tampa"></span
+                ><span class="lixeira-cena-corpo"
+                  ><svg><use href="#icone-reciclar" /></svg><b>Plástico</b
+                  ><small class="lixeira-contagem">0</small></span
+                >
+              </div>
+              <div class="lixeira-cena" data-lixeira="vidro" style="--cor: var(--rec-vidro)">
+                <span class="lixeira-cena-tampa"></span
+                ><span class="lixeira-cena-corpo"
+                  ><svg><use href="#icone-reciclar" /></svg><b>Vidro</b
+                  ><small class="lixeira-contagem">0</small></span
+                >
+              </div>
+              <div class="lixeira-cena" data-lixeira="metal" style="--cor: var(--rec-metal)">
+                <span class="lixeira-cena-tampa"></span
+                ><span class="lixeira-cena-corpo"
+                  ><svg><use href="#icone-reciclar" /></svg><b>Metal</b
+                  ><small class="lixeira-contagem">0</small></span
+                >
+              </div>
+            </div>
+          </div>
+          <p class="separar-placar"><strong id="separar-total">0</strong> de 6 no lugar certo</p>
+        </div>
+      </section>
+
+      <section class="comunidade" id="comunidade" aria-labelledby="titulo-comunidade">
+        <div class="expansor">
+          <div class="expansor-imagem">
+            <img
+              src="/imagens/comunidade-entrega.webp"
+              alt="Mãos entregando uma caixa com recicláveis separados em um ponto de coleta"
+              loading="lazy"
+              width="1122"
+              height="1402"
+            />
+          </div>
+          <div class="expansor-texto largura">
+            <h2 id="titulo-comunidade">Sua atitude inspira.<br />Sua cidade agradece.</h2>
+            <p>
+              Um ponto que você cadastra vira uma descoberta para outra pessoa. De bairro em bairro,
+              a reciclagem encontra mais caminhos.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="beneficios secao" aria-label="O que você pode fazer no app">
+        <div class="largura beneficios-grade">
+          <article class="beneficio revelar">
+            <span class="beneficio-icone"
+              ><svg><use href="#icone-mais-circulo" /></svg
+            ></span>
+            <h3>Compartilhe o que você conhece.</h3>
+            <p>Adicione pontos com foto, endereço e materiais aceitos.</p>
+          </article>
+          <article class="beneficio revelar">
+            <span class="beneficio-icone"
+              ><svg><use href="#icone-coracao" /></svg
+            ></span>
+            <h3>Guarde seus favoritos.</h3>
+            <p>Os pontos da sua rotina sempre à mão.</p>
+          </article>
+          <article class="beneficio revelar">
+            <span class="beneficio-icone"
+              ><svg><use href="#icone-pessoas" /></svg
+            ></span>
+            <h3>Descubra quem faz a diferença.</h3>
+            <p>Veja as contribuições da comunidade na sua cidade.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="renovacao" aria-labelledby="titulo-renovacao">
+        <div class="renovacao-conteudo largura">
+          <figure class="renovacao-imagem">
+            <img
+              src="/imagens/broto-renovacao.webp"
+              alt="Broto verde nascendo de um pedaço de papel reciclado"
+              loading="lazy"
+              width="1254"
+              height="1254"
+            />
+          </figure>
+          <div class="renovacao-texto">
+            <h2 id="titulo-renovacao" class="titulo-revelar">
+              Tem muito futuro <span class="degrade">no que parece fim.</span>
+            </h2>
+            <p class="frase revelar">
+              <strong>Papel vira papel.</strong> Lata vira lata. E um gesto pequeno vira hábito.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="duvidas secao" aria-labelledby="titulo-duvidas">
+        <div class="largura duvidas-conteudo">
+          <h2 id="titulo-duvidas" class="titulo-revelar">Perguntas frequentes.</h2>
+          <div class="perguntas">
+            <details>
+              <summary>
+                O que é o ReciclaPlus?<span class="pergunta-icone" aria-hidden="true"></span>
+              </summary>
+              <p>
+                É um aplicativo para encontrar, cadastrar e compartilhar pontos de coleta de
+                materiais recicláveis. O mapa cresce com as contribuições das pessoas da comunidade.
+              </p>
+            </details>
+            <details>
+              <summary>
+                Posso cadastrar um ponto de coleta?<span
+                  class="pergunta-icone"
+                  aria-hidden="true"
+                ></span>
+              </summary>
+              <p>
+                Sim. Com uma conta no aplicativo, você pode cadastrar um local com foto, endereço,
+                localização, horários e categorias de materiais aceitos. Confirme as informações com
+                o responsável pelo ponto antes de cadastrar.
+              </p>
+            </details>
+            <details>
+              <summary>
+                Como sei quais materiais levar?<span
+                  class="pergunta-icone"
+                  aria-hidden="true"
+                ></span>
+              </summary>
+              <p>
+                Consulte as categorias e os detalhes de cada ponto no aplicativo. As condições de
+                recebimento variam de local para local; confirme horários, preparo e materiais
+                aceitos antes de sair.
+              </p>
+            </details>
+            <details>
+              <summary>
+                Como posso acessar o aplicativo?<span
+                  class="pergunta-icone"
+                  aria-hidden="true"
+                ></span>
+              </summary>
+              <p>
+                O código e as instruções para executar o app com Expo estão disponíveis no GitHub do
+                projeto. Esta página apresenta o ReciclaPlus e usa um mapa ilustrativo; ela não
+                consulta pontos de coleta reais.
+              </p>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section class="convite" id="conheca" aria-labelledby="titulo-convite">
+        <div class="largura convite-corpo">
+          <h2 id="titulo-convite" class="titulo-revelar">
+            Um pequeno gesto.<br /><span class="degrade">Um mundo de possibilidades.</span>
+          </h2>
+          <p class="revelar">
+            Conheça o ReciclaPlus e descubra como dar um novo destino ao que você descarta.
+          </p>
+          <div class="convite-acoes revelar">
+            <a
+              class="botao botao-verde botao-grande magnetico"
+              href="https://github.com/MaxRbrt/ReciclaPlus#como-rodar"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Explore o ReciclaPlus</a
+            >
+            <a
+              class="link-seta"
+              href="https://github.com/MaxRbrt/ReciclaPlus"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Ver o código <span aria-hidden="true">›</span></a
+            >
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="rodape">
+      <div class="rodape-conteudo largura">
+        <p>ReciclaPlus · Código aberto, construído para conectar pessoas e reciclagem.</p>
+        <p>© <span id="ano">2026</span> ReciclaPlus</p>
+      </div>
+    </footer>
+    <div class="aviso-leitor" role="status" aria-live="polite" id="aviso-interacao"></div>
+    <script type="module" src="/src/principal.js"></script>
+  </body>
+</html>
