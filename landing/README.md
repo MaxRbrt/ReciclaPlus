@@ -20,6 +20,21 @@ npm run preview
 
 A pasta `dist/` contém os arquivos estáticos para hospedagem. O build usa caminhos relativos para permitir publicação em subdiretórios. A página precisa ser servida por HTTP; abrir o HTML diretamente pelo explorador de arquivos não executa os módulos.
 
+## Publicar no GitHub Pages
+
+O workflow fica em `.github/workflows/publicar-landing.yml`, na raiz do repositório.
+Ele instala as dependências de `landing/`, gera o build e publica somente `landing/dist/`.
+
+1. No repositório do GitHub, abra **Settings → Pages**.
+2. Em **Build and deployment → Source**, selecione **GitHub Actions**.
+3. Envie as alterações para a branch `main`. Mudanças em `landing/` ou no workflow
+   iniciam a publicação automaticamente.
+4. Acompanhe em **Actions → Publicar landing no GitHub Pages**. Para publicar
+   manualmente, use **Run workflow** com a branch `main`.
+
+Após a primeira publicação bem-sucedida, a landing estará em
+[maxrbrt.github.io/ReciclaPlus/](https://maxrbrt.github.io/ReciclaPlus/).
+
 ## Estrutura
 
 - `index.html`: conteúdo, navegação, telas do aplicativo, tour do app, separação animada e perguntas frequentes.
